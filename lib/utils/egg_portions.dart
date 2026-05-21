@@ -1,6 +1,6 @@
 import '../models/food_reference.dart';
 
-/// Whole eggs and egg whites logged by count, not grams.
+/// Whole eggs by count; egg whites stay in grams.
 class EggPortions {
   EggPortions._();
 
@@ -9,6 +9,9 @@ class EggPortions {
 
   static bool isWholeEgg(FoodReference food) =>
       food.sourceNote == 'local:egg_whole';
+
+  static bool isEggWhite(FoodReference food) =>
+      food.sourceNote == 'local:egg_white';
 
   static bool isCountedByPiece(FoodReference food) => isWholeEgg(food);
 
