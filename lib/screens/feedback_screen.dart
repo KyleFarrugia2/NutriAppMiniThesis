@@ -158,7 +158,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             label: Text(
               AppConfig.hasFeedbackForm
                   ? 'Open feedback form'
-                  : 'Set up feedback form (see README)',
+                  : 'Set up feedback form (app_config.dart)',
             ),
           ),
           const SizedBox(height: 20),

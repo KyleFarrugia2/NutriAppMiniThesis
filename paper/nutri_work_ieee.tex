@@ -53,7 +53,7 @@ Liu \emph{et al.}~\cite{liu2016deepfood} present DeepFood, an influential CNN pi
 
 \section{Methodology}
 \subsection{Overall pipeline}
-The methodology follows three parallel tracks: (i) \emph{mobile product engineering}---Flutter client, local persistence, onboarding, tabbed navigation, dashboards; (ii) \emph{transparent personalization core}---established equations and interpretable rules as an always-available fallback and evaluation baseline; (iii) \emph{ML evaluation protocols} on public data for food classification and sequential recommendation, documented separately from the on-device shell (see \texttt{datasets/README.md}).
+The methodology follows three parallel tracks: (i) \emph{mobile product engineering}---Flutter client, local persistence, onboarding, tabbed navigation, dashboards; (ii) \emph{transparent personalization core}---established equations and interpretable rules as an always-available fallback and evaluation baseline; (iii) \emph{ML evaluation protocols} on public data for food classification and sequential recommendation, documented separately from the on-device shell (public dataset download sources).
 
 \subsection{Personalization and adaptation (implemented prototype)}
 \textbf{Nutrition.} Basal metabolic rate uses the Mifflin--St Jeor equation; total daily energy expenditure applies activity multipliers; goal-specific calorie deltas and per-kilogram macro heuristics yield gram targets. Training versus rest days scale calorie targets by $\pm 10\%$. Meal logging supports manual entry, a built-in local food catalog, and optional USDA FoodData Central search with portion scaling from per-100\,g nutrient bases.
