@@ -1,0 +1,15 @@
+Viva Beamer deck
+================
+
+Build (from viva/):
+
+  pdflatex viva_presentation.tex
+  pdflatex viva_presentation.tex
+
+Optional: latexmk -pdf viva_presentation.tex
+
+Viva constraints (per brief):
+- Maximum about 10 minutes spoken content.
+- Embed or show a screen recording of the working prototype (trim to at most 2 minutes). Easiest: record separately, insert video in PDF only if your Beamer setup supports multimedia; otherwise play the clip alongside the slides during the live viva.
+
+Replace Your Name / Your University on the title slide.

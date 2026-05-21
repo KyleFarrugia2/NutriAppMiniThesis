@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../app_state.dart';
+import '../models/user_profile.dart';
+import '../models/workout_entry.dart';
 import '../services/personalization_engine.dart';
+import '../theme/macro_colors.dart';
+import '../widgets/macro_calorie_chart.dart';
 
 class DashboardTab extends StatelessWidget {
   const DashboardTab({super.key, required this.app});
@@ -36,11 +40,23 @@ class DashboardTab extends StatelessWidget {
               sliver: SliverList.list(
                 children: [
                   if (summary != null) ...[
-                    _CalorieCard(summary: summary, cs: cs),
+                    _CalorieCard(
+                      summary: summary,
+                      cs: cs,
+                      overBudget: summary.caloriesConsumed >
+                          summary.calorieTarget,
+                    ),
                     const SizedBox(height: 16),
                     _MacroRow(summary: summary),
+                    const SizedBox(height: 12),
+                    MacroCalorieVisuals(
+                      proteinG: summary.proteinG,
+                      carbsG: summary.carbsG,
+                      fatG: summary.fatG,
+                      size: 148,
+                    ),
                   ],
-                  if (insight != null) ...[
+                  if (insight != null && !app.nutritionInsightCardDismissed) ...[
                     const SizedBox(height: 8),
                     _InsightCard(
                       title: 'Personalized nutrition insight',
@@ -48,9 +64,10 @@ class DashboardTab extends StatelessWidget {
                       icon: Icons.psychology_alt_outlined,
                       color: cs.primaryContainer,
                       onColor: cs.onPrimaryContainer,
+                      onDismiss: () => app.dismissNutritionInsightCard(),
                     ),
                   ],
-                  if (wo != null) ...[
+                  if (wo != null && !app.dashboardWorkoutSuggestionDismissed) ...[
                     const SizedBox(height: 16),
                     _InsightCard(
                       title: 'Suggested next workout',
@@ -59,19 +76,49 @@ class DashboardTab extends StatelessWidget {
                       icon: Icons.auto_awesome_motion_outlined,
                       color: cs.secondaryContainer,
                       onColor: cs.onSecondaryContainer,
+                      footer: p.workoutGuidanceMode ==
+                              WorkoutGuidanceMode.fixedRotation
+                          ? 'Mode: fixed weekday rotation'
+                          : 'Mode: adaptive from your recent logs',
+                      onDismiss: () => app.dismissDashboardWorkoutSuggestion(),
                     ),
                   ],
-                  const SizedBox(height: 16),
-                  Text(
-                    'Research hooks',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
                   const SizedBox(height: 8),
-                  Text(
-                    'This build uses explainable rules (BMR/TDEE, macro heuristics, recency-aware workout mix). Swap in ML modules for food images, ranking, and wearable fusion without changing the UI shell.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
+                  Card(
+                    child: Theme(
+                      data: Theme.of(context)
+                          .copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        leading: Icon(
+                          Icons.info_outline,
+                          color: cs.primary,
                         ),
+                        title: Text(
+                          'How your plan works',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        childrenPadding: const EdgeInsets.fromLTRB(
+                          20,
+                          0,
+                          20,
+                          16,
+                        ),
+                        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '• Calories and macros use Mifflin–St Jeor BMR, your activity level, and goal-based offsets.\n'
+                            '• Workout suggestions follow your Profile setting: adaptive (last 7 days) or a fixed weekday rotation for baseline comparisons.\n'
+                            '• We recommend averaging at least 8,000 steps per day for any goal (lose, maintain, or gain)—add your typical steps under Profile.',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  height: 1.45,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -84,14 +131,20 @@ class DashboardTab extends StatelessWidget {
 }
 
 class _CalorieCard extends StatelessWidget {
-  const _CalorieCard({required this.summary, required this.cs});
+  const _CalorieCard({
+    required this.summary,
+    required this.cs,
+    required this.overBudget,
+  });
 
   final DailyNutritionSummary summary;
   final ColorScheme cs;
+  final bool overBudget;
 
   @override
   Widget build(BuildContext context) {
     final pct = summary.calorieProgress.clamp(0.0, 1.0);
+    final barColor = overBudget ? cs.error : cs.primary;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -107,7 +160,7 @@ class _CalorieCard extends StatelessWidget {
                   '${summary.caloriesConsumed}',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: cs.primary,
+                        color: barColor,
                       ),
                 ),
                 Padding(
@@ -121,12 +174,23 @@ class _CalorieCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (overBudget) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Above today’s target—fine occasionally; watch weekly average.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: cs.error,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
             const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: pct,
+                value: pct > 1 ? 1 : pct,
                 minHeight: 10,
+                color: barColor,
                 backgroundColor: cs.surfaceContainerHighest,
               ),
             ),
@@ -152,7 +216,7 @@ class _MacroRow extends StatelessWidget {
             value: summary.proteinG,
             target: summary.proteinTargetG,
             unit: 'g',
-            color: Theme.of(context).colorScheme.tertiary,
+            color: MacroColors.protein,
           ),
         ),
         const SizedBox(width: 10),
@@ -162,7 +226,7 @@ class _MacroRow extends StatelessWidget {
             value: summary.carbsG,
             target: summary.carbsTargetG,
             unit: 'g',
-            color: Theme.of(context).colorScheme.primary,
+            color: MacroColors.carbs,
           ),
         ),
         const SizedBox(width: 10),
@@ -172,7 +236,7 @@ class _MacroRow extends StatelessWidget {
             value: summary.fatG,
             target: summary.fatTargetG,
             unit: 'g',
-            color: Theme.of(context).colorScheme.secondary,
+            color: MacroColors.fat,
           ),
         ),
       ],
@@ -204,15 +268,19 @@ class _MiniMacro extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    )),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: color.withOpacity(0.85),
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
             const SizedBox(height: 6),
             Text(
               '${value.round()} / ${target.round()} $unit',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
+                    color: color,
                   ),
             ),
             const SizedBox(height: 8),
@@ -240,6 +308,8 @@ class _InsightCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onColor,
+    this.footer,
+    this.onDismiss,
   });
 
   final String title;
@@ -247,17 +317,22 @@ class _InsightCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final Color onColor;
+  final String? footer;
+  final VoidCallback? onDismiss;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: color,
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(18, 14, 6, 18),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: onColor, size: 28),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(icon, color: onColor, size: 28),
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -278,9 +353,26 @@ class _InsightCard extends StatelessWidget {
                           height: 1.35,
                         ),
                   ),
+                  if (footer != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      footer!,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: onColor.withOpacity(0.85),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
                 ],
               ),
             ),
+            if (onDismiss != null)
+              IconButton(
+                tooltip: 'Dismiss',
+                visualDensity: VisualDensity.compact,
+                onPressed: onDismiss,
+                icon: Icon(Icons.close_rounded, color: onColor.withOpacity(0.88)),
+              ),
           ],
         ),
       ),

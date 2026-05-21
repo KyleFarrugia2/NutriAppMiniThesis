@@ -22,6 +22,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   late Sex _sex;
   late ActivityLevel _activity;
   late NutritionGoal _goal;
+  late WorkoutGuidanceMode _guidanceMode;
 
   @override
   void initState() {
@@ -37,6 +38,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     _sex = p.sex;
     _activity = p.activityLevel;
     _goal = p.goal;
+    _guidanceMode = p.workoutGuidanceMode;
   }
 
   @override
@@ -61,6 +63,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       activityLevel: _activity,
       goal: _goal,
       wearableStepsAvg: stepsText.isEmpty ? null : int.tryParse(stepsText),
+      workoutGuidanceMode: _guidanceMode,
     );
     await widget.app.updateProfile(profile);
     if (mounted) Navigator.pop(context);
@@ -182,9 +185,43 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 TextFormField(
                   controller: _steps,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Avg daily steps (optional)',
+                    helperText:
+                        'For any goal we suggest averaging at least $kRecommendedMinDailySteps steps/day.',
                   ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Workout suggestions',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<WorkoutGuidanceMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: WorkoutGuidanceMode.adaptive,
+                      label: Text('Adaptive'),
+                      icon: Icon(Icons.auto_awesome_outlined),
+                    ),
+                    ButtonSegment(
+                      value: WorkoutGuidanceMode.fixedRotation,
+                      label: Text('Fixed'),
+                      icon: Icon(Icons.calendar_today_outlined),
+                    ),
+                  ],
+                  selected: {_guidanceMode},
+                  onSelectionChanged: (s) =>
+                      setState(() => _guidanceMode = s.first),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _guidanceMode == WorkoutGuidanceMode.adaptive
+                      ? 'Uses your last 7 days of logs to balance strength vs cardio.'
+                      : 'Ignores logs; alternates by weekday for a simple baseline.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
                 const SizedBox(height: 28),
                 FilledButton(

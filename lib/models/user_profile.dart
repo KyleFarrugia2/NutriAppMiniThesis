@@ -10,6 +10,23 @@ enum ActivityLevel {
 
 enum NutritionGoal { loseWeight, maintain, gainMuscle }
 
+/// Minimum average daily steps recommended in-app for every nutrition goal.
+const int kRecommendedMinDailySteps = 8000;
+
+/// Adaptive uses recent logs. Fixed ignores them for a simple baseline comparison.
+enum WorkoutGuidanceMode { adaptive, fixedRotation }
+
+extension WorkoutGuidanceModeX on WorkoutGuidanceMode {
+  String get label {
+    switch (this) {
+      case WorkoutGuidanceMode.adaptive:
+        return 'Adaptive (uses your logs)';
+      case WorkoutGuidanceMode.fixedRotation:
+        return 'Fixed rotation (ignores logs)';
+    }
+  }
+}
+
 extension ActivityLevelX on ActivityLevel {
   double get multiplier {
     switch (this) {
@@ -77,6 +94,7 @@ class UserProfile {
     required this.activityLevel,
     required this.goal,
     this.wearableStepsAvg,
+    this.workoutGuidanceMode = WorkoutGuidanceMode.adaptive,
   });
 
   final String displayName;
@@ -87,8 +105,11 @@ class UserProfile {
   final ActivityLevel activityLevel;
   final NutritionGoal goal;
 
-  /// Optional average daily steps from wearables for adaptive hints.
+  /// Optional average daily steps (e.g. from a wearable) for activity-aware copy.
   final int? wearableStepsAvg;
+
+  /// How the next workout suggestion is produced (thesis comparison).
+  final WorkoutGuidanceMode workoutGuidanceMode;
 
   UserProfile copyWith({
     String? displayName,
@@ -99,6 +120,7 @@ class UserProfile {
     ActivityLevel? activityLevel,
     NutritionGoal? goal,
     int? wearableStepsAvg,
+    WorkoutGuidanceMode? workoutGuidanceMode,
   }) {
     return UserProfile(
       displayName: displayName ?? this.displayName,
@@ -109,6 +131,7 @@ class UserProfile {
       activityLevel: activityLevel ?? this.activityLevel,
       goal: goal ?? this.goal,
       wearableStepsAvg: wearableStepsAvg ?? this.wearableStepsAvg,
+      workoutGuidanceMode: workoutGuidanceMode ?? this.workoutGuidanceMode,
     );
   }
 
@@ -121,6 +144,7 @@ class UserProfile {
         'activityLevel': activityLevel.name,
         'goal': goal.name,
         'wearableStepsAvg': wearableStepsAvg,
+        'workoutGuidanceMode': workoutGuidanceMode.name,
       };
 
   static UserProfile fromJson(Map<String, dynamic> j) {
@@ -142,6 +166,10 @@ class UserProfile {
         orElse: () => NutritionGoal.maintain,
       ),
       wearableStepsAvg: (j['wearableStepsAvg'] as num?)?.toInt(),
+      workoutGuidanceMode: WorkoutGuidanceMode.values.firstWhere(
+        (e) => e.name == j['workoutGuidanceMode'],
+        orElse: () => WorkoutGuidanceMode.adaptive,
+      ),
     );
   }
 }

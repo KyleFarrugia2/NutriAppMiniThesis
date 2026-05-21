@@ -1,0 +1,17 @@
+IEEE conference paper (IEEEtran)
+================================
+
+Prerequisites: MiKTeX or TeX Live with IEEEtran class and IEEEtran.bst.
+
+From this folder (paper/):
+
+  pdflatex nutri_work_ieee.tex
+  bibtex nutri_work_ieee
+  pdflatex nutri_work_ieee.tex
+  pdflatex nutri_work_ieee.tex
+
+Output: nutri_work_ieee.pdf
+
+Replace author block in nutri_work_ieee.tex with your name, department, and email before submission.
+
+If bibtex fails on first run, ensure references.bib is in the same directory as the .tex file.

@@ -1,0 +1,13 @@
+.dart_tool/
+.idea/
+*.iml
+build/
+.flutter/
+android/
+ios/
+linux/
+macos/
+windows/
+paper/
+viva/
+datasets/vendor/

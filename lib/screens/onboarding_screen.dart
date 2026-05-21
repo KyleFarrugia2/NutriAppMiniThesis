@@ -15,9 +15,9 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _form = GlobalKey<FormState>();
   final _name = TextEditingController();
-  final _age = TextEditingController(text: '28');
-  final _height = TextEditingController(text: '170');
-  final _weight = TextEditingController(text: '72');
+  final _age = TextEditingController();
+  final _height = TextEditingController();
+  final _weight = TextEditingController();
   final _steps = TextEditingController();
 
   Sex _sex = Sex.other;
@@ -100,9 +100,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           prefixIcon: Icon(Icons.cake_outlined),
                         ),
                         validator: (v) {
-                          final n = int.tryParse(v ?? '');
+                          final t = v?.trim() ?? '';
+                          if (t.isEmpty) return 'Enter your age';
+                          final n = int.tryParse(t);
                           if (n == null || n < 14 || n > 100) {
-                            return '14–100';
+                            return 'Age must be 14–100';
                           }
                           return null;
                         },
@@ -120,9 +122,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           prefixIcon: Icon(Icons.height),
                         ),
                         validator: (v) {
-                          final n = double.tryParse(v ?? '');
+                          final t = v?.trim() ?? '';
+                          if (t.isEmpty) return 'Enter height';
+                          final n = double.tryParse(t);
                           if (n == null || n < 120 || n > 230) {
-                            return 'cm';
+                            return 'Height 120–230 cm';
                           }
                           return null;
                         },
@@ -141,8 +145,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     prefixIcon: Icon(Icons.monitor_weight_outlined),
                   ),
                   validator: (v) {
-                    final n = double.tryParse(v ?? '');
-                    if (n == null || n < 35 || n > 250) return 'kg';
+                    final t = v?.trim() ?? '';
+                    if (t.isEmpty) return 'Enter your weight';
+                    final n = double.tryParse(t);
+                    if (n == null || n < 35 || n > 250) {
+                      return 'Weight 35–250 kg';
+                    }
                     return null;
                   },
                 ),
@@ -207,10 +215,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 TextFormField(
                   controller: _steps,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Avg daily steps (optional)',
-                    hintText: 'Wearable signal for adaptive hints',
-                    prefixIcon: Icon(Icons.directions_walk_outlined),
+                    hintText: 'e.g. 8500',
+                    helperText:
+                        'For any goal we suggest averaging at least $kRecommendedMinDailySteps steps/day.',
+                    prefixIcon: const Icon(Icons.directions_walk_outlined),
                   ),
                 ),
                 const SizedBox(height: 32),

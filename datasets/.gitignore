@@ -1,0 +1,5 @@
+# Do not commit downloaded corpora
+vendor/
+*.zip
+*.tar
+*.tar.gz

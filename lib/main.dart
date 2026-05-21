@@ -40,7 +40,9 @@ class _NutriWorkAppState extends State<NutriWorkApp> {
     return MaterialApp(
       title: 'Nutri & Workout',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.dark(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.dark,
       home: _Root(app: _appState),
     );
   }
@@ -54,8 +56,21 @@ class _Root extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!app.loaded) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.bolt_rounded,
+                size: 48,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(),
+            ],
+          ),
+        ),
       );
     }
     if (app.profile == null) {

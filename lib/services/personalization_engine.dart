@@ -2,7 +2,7 @@ import '../models/meal_entry.dart';
 import '../models/user_profile.dart';
 import '../models/workout_entry.dart';
 
-/// Rule-based personalization layer (ready to swap for learned models).
+/// Rule-based personalization (transparent heuristics, no ML).
 class PersonalizationEngine {
   const PersonalizationEngine();
 
@@ -31,6 +31,15 @@ class PersonalizationEngine {
   int dailyCalorieTarget(UserProfile p) {
     final raw = tdee(p) + p.goal.calorieDeltaFromTdee();
     return raw.round().clamp(1200, 6000);
+  }
+
+  /// Calorie target for a calendar day given training vs rest layout.
+  /// Rest days are ~10% below the profile baseline; training days ~10% above
+  /// (extra fuel around sessions; lighter days on rest).
+  int dailyCalorieTargetForDayType(UserProfile p, {required bool trainingDay}) {
+    final base = dailyCalorieTarget(p);
+    final scaled = trainingDay ? base * 1.10 : base * 0.90;
+    return scaled.round().clamp(1200, 6000);
   }
 
   /// Grams per kg bodyweight targets (simple heuristic by goal).
@@ -65,8 +74,9 @@ class PersonalizationEngine {
 
   DailyNutritionSummary summarizeDay(
     UserProfile profile,
-    List<MealEntry> mealsOnDay,
-  ) {
+    List<MealEntry> mealsOnDay, {
+    required bool trainingDay,
+  }) {
     int cal = 0;
     double p = 0, c = 0, f = 0;
     for (final m in mealsOnDay) {
@@ -75,17 +85,19 @@ class PersonalizationEngine {
       c += m.carbsG;
       f += m.fatG;
     }
-    final target = dailyCalorieTarget(profile);
+    final baseCal = dailyCalorieTarget(profile);
+    final target = dailyCalorieTargetForDayType(profile, trainingDay: trainingDay);
     final macros = macroGramTargets(profile);
+    final factor = baseCal <= 0 ? 1.0 : target / baseCal;
     return DailyNutritionSummary(
       caloriesConsumed: cal,
       calorieTarget: target,
       proteinG: p,
       carbsG: c,
       fatG: f,
-      proteinTargetG: macros.proteinG,
-      carbsTargetG: macros.carbsG,
-      fatTargetG: macros.fatG,
+      proteinTargetG: macros.proteinG * factor,
+      carbsTargetG: macros.carbsG * factor,
+      fatTargetG: macros.fatG * factor,
     );
   }
 
@@ -112,11 +124,37 @@ class PersonalizationEngine {
       ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
   }
 
-  /// Simple sequential-style recommendation (FitRec-inspired: recency + balance).
+  /// Fixed weekday rotation: ignores logs (explicit thesis / evaluation baseline).
+  WorkoutRecommendation _fixedRotationSuggestion(UserProfile p) {
+    final strengthDay = DateTime.now().weekday.isOdd;
+    if (strengthDay) {
+      return WorkoutRecommendation(
+        title: 'Template: full-body strength (40–50 min)',
+        type: WorkoutType.strength,
+        rationale:
+            'Fixed rotation (odd weekdays → strength). This template does not use your recent logs—use it as a transparent baseline when comparing adherence or UX.',
+        intensityHint:
+            'Moderate loads; add weight only when form stays crisp across sets.',
+      );
+    }
+    return WorkoutRecommendation(
+      title: 'Template: aerobic conditioning (30–40 min)',
+      type: WorkoutType.cardio,
+      rationale:
+            'Fixed rotation (even weekdays → cardio). Same pattern regardless of what you logged recently.',
+      intensityHint: 'Easy to moderate “conversation pace” unless your goal is high intensity.',
+    );
+  }
+
+  /// Recency-aware mix balancing for the next session suggestion.
   WorkoutRecommendation nextWorkoutSuggestion(
     UserProfile p,
     List<WorkoutEntry> recent,
   ) {
+    if (p.workoutGuidanceMode == WorkoutGuidanceMode.fixedRotation) {
+      return _fixedRotationSuggestion(p);
+    }
+
     final last7 = workoutsSince(
       recent,
       DateTime.now().subtract(const Duration(days: 7)),
@@ -164,7 +202,7 @@ class PersonalizationEngine {
           : 'Mixed circuit: strength + short intervals',
       type: WorkoutType.strength,
       rationale:
-          'Balanced default based on your profile and recent mix—personalized as a baseline before ML ranking.',
+          'Balanced default based on your profile and recent training mix.',
       intensityHint: 'Log RPE after the session to tune next recommendations.',
     );
   }

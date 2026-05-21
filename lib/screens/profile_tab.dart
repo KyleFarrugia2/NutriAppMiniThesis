@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
+import '../models/user_profile.dart';
 import 'profile_edit_screen.dart';
+import 'feedback_screen.dart';
+import 'usda_api_settings_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key, required this.app});
@@ -24,6 +27,7 @@ class ProfileTab extends StatelessWidget {
         final tdee = e.tdee(p).round();
         final cal = e.dailyCalorieTarget(p);
         final macros = e.macroGramTargets(p);
+        final cs = Theme.of(context).colorScheme;
 
         return Scaffold(
           appBar: AppBar(title: const Text('Profile')),
@@ -66,6 +70,52 @@ class ProfileTab extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              Card(
+                child: SwitchListTile(
+                  title: const Text('Workout suggestion mode'),
+                  subtitle: Text(
+                    p.workoutGuidanceMode.label,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  value: p.workoutGuidanceMode == WorkoutGuidanceMode.adaptive,
+                  onChanged: (v) async {
+                    await app.updateProfile(
+                      p.copyWith(
+                        workoutGuidanceMode: v
+                            ? WorkoutGuidanceMode.adaptive
+                            : WorkoutGuidanceMode.fixedRotation,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (app.hasDismissedSuggestionContent) ...[
+                const SizedBox(height: 12),
+                Card(
+                  child: ListTile(
+                    leading: Icon(Icons.replay_rounded, color: cs.primary),
+                    title: const Text('Show dismissed suggestions again'),
+                    subtitle: Text(
+                      'Home insights, coach card, and per-slot macro hints.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                    ),
+                    onTap: () async {
+                      await app.restoreDismissedSuggestions();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Suggestions are visible again.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Text(
                 'Personalized energy & macros',
@@ -120,6 +170,49 @@ class ProfileTab extends StatelessWidget {
                   );
                 },
                 child: const Text('Edit profile'),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.vpn_key_outlined, color: cs.primary),
+                  title: const Text('USDA FoodData Central'),
+                  subtitle: Text(
+                    app.hasUsdaApiKey
+                        ? 'API key on device — full food search enabled'
+                        : 'Add a free key for live USDA search (optional)',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => UsdaApiSettingsScreen(app: app),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.rate_review_outlined, color: cs.primary),
+                  title: const Text('Feedback & questions'),
+                  subtitle: Text(
+                    'Share tester feedback or ask about the app',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const FeedbackScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 16),
               Text(

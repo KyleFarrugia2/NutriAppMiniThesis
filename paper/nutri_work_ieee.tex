@@ -1,0 +1,160 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Development of a Mobile Application for Personalized Nutrition and Workout Tracking}
+
+\author{\IEEEauthorblockN{Kyle Farrugia}
+\IEEEauthorblockA{\textit{Institute of Information and Communication Technology} \\
+\textit{SWD 6.2A --- B.Sc. (Hons) Software Development} \\
+kyle.farrugia.j94928@mcast.edu.mt}
+}
+
+\maketitle
+
+\begin{abstract}
+Generic wellness applications often provide static meal plans and workout templates that ignore recent behaviour, which undermines long-term adherence. This research designs and implements \emph{Nutri Work}, a cross-platform Flutter prototype that couples transparent nutrition personalization with recency-aware workout guidance in a single mobile shell. Methods include Mifflin--St Jeor energy equations, per-kilogram macro heuristics, rule-based adaptation over seven-day training logs, and documented offline evaluation protocols on public corpora (Food-101, fitness interaction logs) for future CNN and sequential recommender modules. The delivered build supports onboarding, USDA FoodData Central and offline food search with gram-based scaling, meal and workout logging, dashboard summaries with explainable insights, and a user-selectable \emph{fixed rotation} baseline that ignores logs for controlled comparison. Results demonstrate end-to-end adaptive behaviour---for example, cardio-heavy weeks bias toward strength sessions---without claiming clinical efficacy. Limitations include the absence of a trained image classifier in the reference build and exploratory, small-$N$ adherence evidence. The contribution is an integrated, reproducible prototype aligned with nutrition AI surveys and sequence-based fitness recommendation, with a clear path to top-$k$ food recognition and recall@$k$/NDCG@$k$ benchmarking.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Personalized nutrition, workout recommendation, mobile health, machine learning, food image recognition
+\end{IEEEkeywords}
+
+\section{Introduction}
+Diet and physical activity are established determinants of long-term health, yet many consumers abandon mobile wellness products when guidance feels impersonal or inflexible~\cite{armand2024systematic}. Commercial apps frequently rely on one-time questionnaires and fixed templates; they underuse longitudinal signals from repeated logging and rarely coordinate nutrition targets with training adaptation in one coherent experience.
+
+\textbf{Research aim.} Design and implement a mobile application that supports adaptive nutrition and workout guidance, structured so machine-learning (ML) components for food imagery and sequential workout ranking can replace transparent rule modules without redesigning the user interface.
+
+\textbf{Hypothesis (exploratory).} An adaptive system that adjusts targets and session suggestions from recent user behaviour will achieve at least comparable task completion for logging and session planning versus a rigid alternative in informal small-scale testing; learned modules trained on public benchmarks will outperform naive non-sequential baselines on standard offline metrics, subject to dataset shift on real meal photos.
+
+\textbf{Research questions.}
+\begin{enumerate}
+  \item Does an adaptive, ML-ready system improve logging and workout completion compared with a fixed, rule-based variant in informal self-testing?
+  \item Can image-assisted meal logging plus a sequence-aware recommender outperform manual logging and a non-sequential baseline on offline accuracy and ranking metrics, and do short usability tasks provide minimal evidence of mobile feasibility?
+\end{enumerate}
+
+\textbf{Scope.} The contribution is a working mobile prototype and an evaluation \emph{framework}, not a clinical trial or a production recommender service. Nutrition guidance uses transparent equations; workout suggestions expose human-readable rationales. Machine-learning components are specified for offline benchmarking on public datasets rather than claimed as fully trained in the reference build.
+
+\section{Literature review and state of the art}
+Armand \emph{et al.}~\cite{armand2024systematic} systematically review artificial intelligence, ML, and deep learning in nutrition. They report diversity from classical models (random forests, support vector machines, $k$-nearest neighbours, boosting) to convolutional neural networks (CNNs) for food imagery and recurrent models for longitudinal intake. Accuracy alone is an insufficient proxy for usefulness: class imbalance, inconsistent metrics, limited independent validation, and weak attention to fairness and explainability recur. Their conclusions motivate transparent baselines, public datasets where possible, and reporting of negative or weak results.
+
+Ni \emph{et al.}~\cite{ni2019modeling} model heart rate and activity for personalized fitness recommendation, showing that preferences evolve and that sequence-aware approaches can outperform simpler popularity or neighbourhood methods on ranking-oriented tasks. Metrics such as recall@$k$ and normalized discounted cumulative gain (NDCG@$k$) are appropriate for offline recommender comparison, with the caveat that offline gains do not guarantee real-world adherence.
+
+Liu \emph{et al.}~\cite{liu2016deepfood} present DeepFood, an influential CNN pipeline for computer-aided dietary assessment, reporting strong top-1 and top-5 performance on Food-101~\cite{bossard2014food}. Top-$k$ accuracy matters for mobile user experience because users can correct from a shortlist. Real-world imagery, however, differs from curated benchmarks; latency and explicit confirmation remain critical.
+
+\textbf{Synthesis.} Nutrition ML spans heterogeneous data sources; workout personalization benefits from sequential modelling when sufficient interaction history exists; food logging benefits from CNNs plus user correction. Few works integrate diet and training adaptation in one reproducible mobile stack with explicit scope limits where evidence is thin---this project targets that integration gap at prototype depth.
+
+\section{Methodology}
+\subsection{Overall pipeline}
+The methodology follows three parallel tracks: (i) \emph{mobile product engineering}---Flutter client, local persistence, onboarding, tabbed navigation, dashboards; (ii) \emph{transparent personalization core}---established equations and interpretable rules as an always-available fallback and evaluation baseline; (iii) \emph{ML evaluation protocols} on public data for food classification and sequential recommendation, documented separately from the on-device shell (see \texttt{datasets/README.md}).
+
+\subsection{Personalization and adaptation (implemented prototype)}
+\textbf{Nutrition.} Basal metabolic rate uses the Mifflin--St Jeor equation; total daily energy expenditure applies activity multipliers; goal-specific calorie deltas and per-kilogram macro heuristics yield gram targets. Training versus rest days scale calorie targets by $\pm 10\%$. Meal logging supports manual entry, a built-in local food catalog, and optional USDA FoodData Central search with portion scaling from per-100\,g nutrient bases.
+
+\textbf{Workouts.} The \texttt{PersonalizationEngine} implements recency-aware mix balancing over the last seven days: strength versus cardio counts, time since the last strength session, and profile goals influence the next recommendation title, type, rationale, and intensity hint. A \emph{fixed rotation} mode (odd weekdays $\rightarrow$ strength template, even weekdays $\rightarrow$ cardio template) deliberately ignores logs to support Research Question~1 comparisons without a full randomized trial.
+
+\textbf{Persistence and ethics.} Data are stored on-device. Full clinical trials and broad user studies are out of scope; informal self-testing and optional feedback from a handful of volunteers are reported descriptively only. Ethics approval is required before formal participant recruitment.
+
+\subsection{Energy and macro formulae}
+Let $w$ denote body mass (kg), $h$ height (cm), and $a$ age (years). Basal metabolic rate (BMR) follows Mifflin--St Jeor~\cite{armand2024systematic}:
+\begin{equation}
+\mathrm{BMR} = 10w + 6.25h - 5a + s
+\end{equation}
+where $s{=}5$ for male, $s{=}{-}161$ for female, and $s{=}{-}78$ for other or undisclosed sex categories in the profile model. Total daily energy expenditure is $\mathrm{TDEE} = \mathrm{BMR} \times \alpha$, with activity multiplier $\alpha$ selected from sedentary through very active levels. Daily calorie targets apply a goal-specific offset to TDEE (deficit for weight loss, surplus for muscle gain). Macro gram targets scale per-kilogram protein, carbohydrate, and fat coefficients by $w$, then scale proportionally when training-day calorie targets differ from rest days ($\pm 10\%$). This pipeline is deterministic and auditable---suitable as a fallback when learned models are unavailable.
+
+\subsection{Adaptive workout policy}
+Over a rolling seven-day window, let $S$ and $C$ denote logged strength and cardio session counts. The adaptive policy applies ordered rules: (1) if $\geq 2$ days have passed since the last strength log, suggest strength for continuity; (2) if $C > S + 2$, bias toward strength to rebalance mix; (3) if $S > C + 2$, suggest zone-2 cardio; (4) otherwise emit a goal-aware default (e.g., progressive overload for muscle-gain goals). Each suggestion includes a title, type, rationale string, and intensity hint (rate of perceived exertion guidance). Fixed rotation bypasses $(S,C)$ and maps odd weekdays to a strength template and even weekdays to cardio, enabling A/B-style self-comparison without hidden state.
+
+\subsection{Evaluation design for Research Question 1}
+A pragmatic comparison protocol records, over two comparable calendar weeks: (a) number of meals and workouts logged; (b) whether the user followed the suggested session type; (c) subjective burden (optional 1--5 scale). Week~A uses adaptive mode; Week~B uses fixed rotation (or vice versa). Descriptive statistics (medians, counts) are reported without inferential claims. This design mirrors the spirit of within-subject piloting described in fitness recommender work~\cite{ni2019modeling} while acknowledging that order effects and motivation confounds are not controlled.
+
+\subsection{Machine learning modules (planned / offline)}
+Food-image support will follow CNN practice on Food-101~\cite{bossard2014food,liu2016deepfood}, recording top-1 and top-5 accuracy and on-device inference latency. Workout ranking will follow Ni-style sequential modelling against simpler baselines on public interaction-style logs, reporting recall@$k$ and NDCG@$k$. Hyperparameters and seeds will be versioned for reproducibility.
+
+\subsection{Software architecture}
+The client is implemented in Dart with Flutter for Android, iOS, and desktop targets. Application state centralizes profile, meal, and workout collections; a storage repository persists JSON-encoded entities locally so the prototype operates without a mandatory backend. Screens are organized by concern: onboarding collects demographics, anthropometrics, goal, activity level, and optional average step counts; the nutrition tab lists daily meals with swipe-to-delete and supports food search; the workout tab validates session logs and surfaces the next recommendation; the dashboard aggregates calorie progress, macro bars, and textual insights generated by the personalization engine. This separation keeps ML modules replaceable: a future CNN service can return ranked food labels into the existing quantity screen, and a learned ranker can output session identifiers consumed by the same recommendation card widget.
+
+\subsection{Dataset strategy}
+Large public corpora are not committed to version control. Food-101~\cite{bossard2014food} supports offline CNN baselines; FitRec-style fitness logs support sequential recommender evaluation; NHANES offers tabular dietary recall for subgroup analysis if required. Private exports from the app remain small-$N$ and exploratory. Download instructions and directory layout are documented alongside the prototype.
+
+\section{Findings}
+\subsection{Prototype behaviour versus fixed guidance}
+The delivered application provides coherent onboarding, persistent meal and workout logs, a dashboard with calorie progress, macro bars, and natural-language nutrition insights, and explainable rationales on the workout tab. In \emph{adaptive} mode, logging a cardio-heavy week triggers strength-biased suggestions; long gaps after strength sessions prioritize another strength block. In \emph{fixed rotation} mode, suggestions follow the weekday template regardless of history---a transparent baseline for structured self-experimentation (e.g., tallying accepted suggestions or logging completion over comparable periods). This addresses Research Question~1 only at exploratory scale; causal claims are avoided.
+
+\subsection{Relation to offline ML benchmarks in the literature}
+Published Food-101 CNN baselines achieve useful top-$k$ performance~\cite{liu2016deepfood}; the current prototype emphasizes search-based and catalog-based meal capture rather than camera inference, acknowledging dataset shift and the need for user confirmation when CNNs are integrated. Sequential recommenders report ranking gains over non-sequential methods on suitable logs~\cite{ni2019modeling}; the app's recommender is a transparent, sequence-inspired heuristic suitable as a stand-in until trained models are served. Research Question~2 is therefore answered in two parts: \emph{offline} metrics are to be produced on downloaded public corpora following cited protocols; \emph{usability} evidence remains lightweight (timed logging tasks, optional short questionnaires).
+
+\subsection{Comparison with prior work}
+Relative to Armand \emph{et al.}~\cite{armand2024systematic}, this project prioritizes an integrated mobile shell and explicit baseline modes over reporting a single accuracy figure in isolation. Relative to DeepFood~\cite{liu2016deepfood}, meal capture currently trades photographic automation for verified search results---a deliberate staging choice until a mobile CNN is trained and latency-tested. Relative to Ni \emph{et al.}~\cite{ni2019modeling}, the implemented policy captures the \emph{spirit} of sequence-aware coaching (recent mix and gaps) without claiming equivalence to their learned ranker; offline recall@$k$ and NDCG@$k$ comparisons remain the objective benchmark once public fitness logs are processed.
+
+\subsection{Informal usability observations}
+During development, representative flows---onboarding, logging a catalog meal with gram portions, logging a workout, and reading dashboard insights---completed in under a few minutes on an emulator, suggesting the interface is viable for classroom demonstration. No formal System Usability Scale (SUS) study was conducted; any future study should pre-register tasks (e.g., time-to-log a standard meal) and report medians with participant counts.
+
+\subsection{Illustrative adaptive scenario}
+Consider a user whose goal is general fitness maintenance and who logs four cardio sessions and one strength session within seven days. The engine observes $C{=}4$, $S{=}1$, hence $C > S + 2$, and recommends a full-body strength session with a rationale citing cardio-heavy recent history. If the same user switches to fixed rotation on a Tuesday (even weekday), the recommendation becomes the aerobic template regardless of $C$ and $S$---demonstrating divergent behaviour from identical logs. Nutrition insights operate independently: if protein intake falls below $85\%$ of the personalized target, the dashboard nudges a protein-rich next meal. This coupling of independent nutrition and workout modules within one shell is the primary integration outcome.
+
+\subsection{Implemented feature inventory}
+Table~\ref{tab:features} lists major capabilities in the reference build. Items marked ``planned'' align with the ML track and public-dataset protocols.
+
+\begin{table}[htbp]
+\caption{Major prototype capabilities in the reference build.}
+\label{tab:features}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Area} & \textbf{Capability} \\
+\hline
+Profile & Onboarding, edit profile, adaptive/fixed toggle \\
+\hline
+Nutrition & Manual meal, local catalog, USDA search, gram scaling \\
+\hline
+Nutrition & Daily macro bars, calorie progress, insights \\
+\hline
+Workout & Session log, history, next-session card \\
+\hline
+Workout & Weekly plan editor, progression tracking \\
+\hline
+ML track & Food-101 CNN (planned), FitRec ranker (planned) \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsection{Evaluation of research questions}
+Table~\ref{tab:rq} summarizes evidentiary status. Weak or negative offline results, if observed when models are trained, will be reported per the transparency commitment in the literature review.
+
+\begin{table}[htbp]
+\caption{Mapping of research questions to evidence types and limitations.}
+\label{tab:rq}
+\begin{center}
+\begin{tabular}{|p{0.22\linewidth}|p{0.30\linewidth}|p{0.40\linewidth}|}
+\hline
+\textbf{Question} & \textbf{Evidence} & \textbf{Limitation} \\
+\hline
+RQ1 (adaptive vs.\ fixed) & Informal logs, descriptive stats & Not a randomized trial; high bias \\
+\hline
+RQ2 (ML modules + UX) & Public offline metrics; timed tasks & Dataset shift; small-$N$ UX \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\section{Conclusion}
+This work delivers \emph{Nutri Work}, an integrated Flutter prototype that couples personalized nutrition targets with recency-aware workout guidance, a selectable fixed baseline, and extension points for CNN-based meal capture and sequential recommenders. Achievements include a deployable, explainable application shell, documented energy and adaptation formulae, an explicit within-subject evaluation protocol for adaptive versus fixed behaviour, and a documented path to public-benchmark experiments on Food-101 and fitness interaction logs.
+
+Limitations remain substantial: no trained image classifier ships in the reference build; adherence evidence is exploratory; offline ranking metrics may not transfer to engagement; and the fixed rotation baseline, while transparent, is not a randomized control condition. Future work should (i) train and quantize a mobile CNN with top-$k$ shortlist UX; (ii) fit and serve a sequential ranker with recall@$k$ and NDCG@$k$ reporting against non-sequential baselines; (iii) measure on-device latency and battery impact; and (iv) where ethics permits, run small controlled usability studies with pre-registered tasks and instruments such as SUS or task-completion time.
+
+\section*{Acknowledgment}
+The author thanks project supervisors and informal testers for feedback during prototype development.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

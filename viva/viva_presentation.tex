@@ -1,0 +1,96 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+
+\title[Nutri \& Work]{Development of a Mobile Application for\\Personalized Nutrition and Workout Tracking}
+\author{Kyle Farrugia}
+\institute{Institute of Information and Communication Technology\\SWD 6.2A --- B.Sc. (Hons) Software Development}
+\date{Milestone 02 --- Viva}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Problem and motivation}
+  \begin{itemize}
+    \item Long-term health depends on diet and exercise, but adherence drops when apps feel generic.
+    \item Fixed templates rarely adapt when schedules, motivation, or training stress change.
+    \item Goal: one integrated mobile experience combining nutrition targets and adaptive training guidance.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Research aim and questions}
+  \textbf{Aim:} ML-ready personalised nutrition + workouts with transparent evaluation.\\[0.6em]
+  \textbf{RQ1:} Does an adaptive system improve logging / workout completion vs.\ a fixed variant? (informal, small-$N$.)\\[0.4em]
+  \textbf{RQ2:} On public benchmarks, can image-assisted logging + sequential recommender beat manual + non-sequential baselines? Light usability tasks for mobile feasibility.
+\end{frame}
+
+\begin{frame}{Related work (compact)}
+  \begin{itemize}
+    \item Nutrition AI survey: diverse ML, CNNs for food images, need for baselines and honest metrics (Armand \emph{et al.}, 2024).
+    \item Fitness recommendation: preferences evolve; sequence models help ranking (Ni \emph{et al.}, WWW 2019).
+    \item Food recognition: DeepFood / Food-101; top-$k$ matters for correction UX (Liu \emph{et al.}, 2016; Bossard \emph{et al.}, ECCV 2014).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Methodology --- pipeline}
+  \begin{enumerate}
+    \item \textbf{Mobile app (Flutter):} onboarding, logging, dashboards, local persistence.
+    \item \textbf{Transparent core:} BMR/TDEE, macro heuristics, recency-aware workout mix rules.
+    \item \textbf{ML track (documented):} Food-101 / fitness logs; top-1/top-5, recall@$k$, NDCG@$k$; optional MLOps tracking.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Prototype architecture}
+  \begin{itemize}
+    \item Client-side shell with extension points for CNN/API and recommender service.
+    \item Explainable rationales to support trust (not black-box scores in UI).
+    \item Privacy stance: no large private corpus in repo; NHANES/Food-101 used per public licenses offline.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Findings --- what the build shows today}
+  \begin{itemize}
+    \item End-to-end flows: profile $\rightarrow$ daily targets $\rightarrow$ meal/workout logs $\rightarrow$ next-session suggestion with reasons.
+    \item Adaptive rule layer reacts to last 7 days (strength vs.\ cardio balance, gaps).
+    \item Food image path: stub/placeholder for thesis CNN integration (honest reporting).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Evaluation stance}
+  \begin{itemize}
+    \item RQ1: structured self-testing / optional friend feedback --- descriptive stats only.
+    \item RQ2: offline benchmarks on downloaded public data; usability: timed tasks, short questionnaire.
+    \item Limitations: no RCT; dataset shift for real meal photos; offline $\neq$ adherence.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Demo plan (embed up to 2 minutes)}
+  \begin{itemize}
+    \item Record screen capture: onboarding snippet, log meal, log workout, show dashboard insight and next workout rationale.
+    \item Keep total viva $\leq$ 10 minutes including this clip.
+    \item Tip: use emulator or device screen record; trim in editor to $\leq$ 2 min.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Conclusion and future work}
+  \begin{itemize}
+    \item Delivered: integrated, explainable prototype + clear ML evaluation path.
+    \item Next: train/serve CNN + sequential model; expand ethics-approved user testing if required.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{Key references}
+  \tiny
+  \begin{thebibliography}{99}
+  \bibitem{armand2024} T. Armand \emph{et al.}, ``Applications of Artificial Intelligence, Machine Learning, and Deep Learning in Nutrition: A Systematic Review,'' \emph{Nutrients}, 2024.
+  \bibitem{ni2019} J. Ni \emph{et al.}, ``Modeling Heart Rate and Activity Data for Personalized Fitness Recommendation,'' in \emph{Proc. WWW}, 2019.
+  \bibitem{liu2016} C. Liu \emph{et al.}, ``DeepFood: Deep Learning Based Food Image Recognition for Computer Aided Dietary Assessment,'' arXiv:1606.05675, 2016.
+  \bibitem{bossard2014} L. Bossard \emph{et al.}, ``Food-101 -- Mining Discriminative Components with Random Forests,'' in \emph{ECCV}, 2014.
+  \end{thebibliography}
+\end{frame}
+
+\end{document}

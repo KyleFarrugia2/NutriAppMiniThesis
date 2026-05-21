@@ -8,6 +8,7 @@ class MealEntry {
     required this.fatG,
     required this.loggedAt,
     this.imageNote,
+    this.slotKey,
   });
 
   final String id;
@@ -18,8 +19,11 @@ class MealEntry {
   final double fatG;
   final DateTime loggedAt;
 
-  /// Placeholder for food-image pipeline (thesis: CV + nutrient estimation).
+  /// Optional tag for how the meal was logged (e.g. manual, USDA id, local catalog).
   final String? imageNote;
+
+  /// Daily plan slot: `m1`…`m5`, `pre`, `post`, or `extra` for add-on meals.
+  final String? slotKey;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -30,6 +34,7 @@ class MealEntry {
         'fatG': fatG,
         'loggedAt': loggedAt.toIso8601String(),
         'imageNote': imageNote,
+        'slotKey': slotKey,
       };
 
   static MealEntry fromJson(Map<String, dynamic> j) {
@@ -42,6 +47,7 @@ class MealEntry {
       fatG: (j['fatG'] as num).toDouble(),
       loggedAt: DateTime.parse(j['loggedAt'] as String),
       imageNote: j['imageNote'] as String?,
+      slotKey: j['slotKey'] as String?,
     );
   }
 }
