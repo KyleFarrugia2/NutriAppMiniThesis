@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/food_image_resolver.dart';
 
-/// Minimal cartoon-style food tile (category icon, no photos).
+/// Minimal cartoon food tile (pastel box + per-item emoji or icon).
 class FoodThumbnail extends StatelessWidget {
   const FoodThumbnail({
     super.key,
@@ -38,7 +38,8 @@ class FoodThumbnail extends StatelessWidget {
       imageCategory: imageCategory,
     );
     final radius = size * 0.24;
-    final iconSize = size * 0.48;
+    final emojiSize = size * 0.52;
+    final iconSize = size * 0.44;
 
     return Container(
       width: size,
@@ -47,21 +48,28 @@ class FoodThumbnail extends StatelessWidget {
         color: v.background,
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: v.foreground.withValues(alpha: 0.22),
+          color: v.foreground.withValues(alpha: 0.18),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: v.foreground.withValues(alpha: 0.08),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Icon(
-        v.icon,
-        size: iconSize,
-        color: v.foreground,
+      child: Center(
+        child: v.usesEmoji
+            ? Text(
+                v.emoji!,
+                style: TextStyle(fontSize: emojiSize, height: 1),
+              )
+            : Icon(
+                v.icon ?? Icons.restaurant_rounded,
+                size: iconSize,
+                color: v.foreground,
+              ),
       ),
     );
   }

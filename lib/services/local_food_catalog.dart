@@ -310,6 +310,7 @@ class LocalFoodCatalog {
       carbsPer100g: 22.8,
       fatPer100g: 0.3,
       sourceNote: 'local:banana',
+      imageCategory: 'banana',
     ),
     FoodReference(
       name: 'Apple, raw, with skin (mixed varieties)',
@@ -318,6 +319,7 @@ class LocalFoodCatalog {
       carbsPer100g: 14,
       fatPer100g: 0.2,
       sourceNote: 'local:apple',
+      imageCategory: 'apple',
     ),
     FoodReference(
       name: 'Orange, raw (all commercial varieties)',
@@ -326,6 +328,7 @@ class LocalFoodCatalog {
       carbsPer100g: 12,
       fatPer100g: 0.1,
       sourceNote: 'local:orange',
+      imageCategory: 'orange',
     ),
     FoodReference(
       name: 'Blueberries, raw',
@@ -334,6 +337,7 @@ class LocalFoodCatalog {
       carbsPer100g: 14.5,
       fatPer100g: 0.3,
       sourceNote: 'local:blueberries',
+      imageCategory: 'blueberry',
     ),
     FoodReference(
       name: 'Strawberries, raw',
@@ -342,7 +346,7 @@ class LocalFoodCatalog {
       carbsPer100g: 7.7,
       fatPer100g: 0.3,
       sourceNote: 'local:strawberries',
-      imageCategory: 'berry',
+      imageCategory: 'strawberry',
     ),
     FoodReference(
       name: 'Grapes, red or green, raw',
@@ -351,6 +355,7 @@ class LocalFoodCatalog {
       carbsPer100g: 18,
       fatPer100g: 0.2,
       sourceNote: 'local:grapes',
+      imageCategory: 'grape',
     ),
     FoodReference(
       name: 'Watermelon, raw',
@@ -359,6 +364,7 @@ class LocalFoodCatalog {
       carbsPer100g: 8,
       fatPer100g: 0.2,
       sourceNote: 'local:watermelon',
+      imageCategory: 'watermelon',
     ),
     FoodReference(
       name: 'Avocado, raw',
@@ -367,6 +373,7 @@ class LocalFoodCatalog {
       carbsPer100g: 8.5,
       fatPer100g: 15,
       sourceNote: 'local:avocado',
+      imageCategory: 'avocado',
     ),
 
     // —— Vegetables ——
@@ -377,6 +384,7 @@ class LocalFoodCatalog {
       carbsPer100g: 3.9,
       fatPer100g: 0.2,
       sourceNote: 'local:tomato',
+      imageCategory: 'tomato',
     ),
     FoodReference(
       name: 'Pepper, sweet green bell, raw',
@@ -385,6 +393,7 @@ class LocalFoodCatalog {
       carbsPer100g: 4.6,
       fatPer100g: 0.2,
       sourceNote: 'local:green_pepper',
+      imageCategory: 'pepper_veg',
     ),
     FoodReference(
       name: 'Pepper, sweet red bell, raw',
@@ -393,6 +402,7 @@ class LocalFoodCatalog {
       carbsPer100g: 6,
       fatPer100g: 0.3,
       sourceNote: 'local:red_pepper',
+      imageCategory: 'pepper_veg',
     ),
     FoodReference(
       name: 'Onion, yellow, raw',
@@ -409,6 +419,7 @@ class LocalFoodCatalog {
       carbsPer100g: 3.6,
       fatPer100g: 0.4,
       sourceNote: 'local:spinach_raw',
+      imageCategory: 'lettuce',
     ),
     FoodReference(
       name: 'Lettuce, romaine, raw',
@@ -417,6 +428,7 @@ class LocalFoodCatalog {
       carbsPer100g: 3.3,
       fatPer100g: 0.3,
       sourceNote: 'local:lettuce_romaine',
+      imageCategory: 'lettuce',
     ),
     FoodReference(
       name: 'Carrot, raw',
@@ -425,6 +437,7 @@ class LocalFoodCatalog {
       carbsPer100g: 10,
       fatPer100g: 0.2,
       sourceNote: 'local:carrot',
+      imageCategory: 'carrot',
     ),
     FoodReference(
       name: 'Potato, russet, baked, flesh only',
@@ -433,6 +446,7 @@ class LocalFoodCatalog {
       carbsPer100g: 21,
       fatPer100g: 0.1,
       sourceNote: 'local:potato_baked',
+      imageCategory: 'potato',
     ),
     FoodReference(
       name: 'Sweet potato, baked, flesh',
@@ -441,6 +455,7 @@ class LocalFoodCatalog {
       carbsPer100g: 21,
       fatPer100g: 0.2,
       sourceNote: 'local:sweet_potato',
+      imageCategory: 'potato',
     ),
     FoodReference(
       name: 'Cucumber, with peel, raw',
@@ -457,6 +472,7 @@ class LocalFoodCatalog {
       carbsPer100g: 3.3,
       fatPer100g: 0.3,
       sourceNote: 'local:mushrooms',
+      imageCategory: 'mushroom',
     ),
     FoodReference(
       name: 'Broccoli, boiled, drained',
@@ -465,6 +481,7 @@ class LocalFoodCatalog {
       carbsPer100g: 7.2,
       fatPer100g: 0.4,
       sourceNote: 'local:broccoli_boiled',
+      imageCategory: 'broccoli',
     ),
     FoodReference(
       name: 'Cauliflower, raw',
@@ -567,6 +584,7 @@ class LocalFoodCatalog {
       carbsPer100g: 82,
       fatPer100g: 0,
       sourceNote: 'local:honey',
+      imageCategory: 'honey',
     ),
 
     // —— Snacks & misc ——
@@ -577,6 +595,7 @@ class LocalFoodCatalog {
       carbsPer100g: 46,
       fatPer100g: 43,
       sourceNote: 'local:dark_chocolate',
+      imageCategory: 'snack',
     ),
     FoodReference(
       name: 'Granola, homemade style (with nuts)',
