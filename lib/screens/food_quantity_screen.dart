@@ -7,6 +7,7 @@ import '../models/food_reference.dart';
 import '../models/meal_entry.dart';
 import '../theme/macro_colors.dart';
 import '../utils/meal_log_time.dart';
+import '../widgets/food_thumbnail.dart';
 import '../widgets/macro_calorie_chart.dart';
 
 class FoodQuantityScreen extends StatefulWidget {
@@ -53,6 +54,15 @@ class _FoodQuantityScreenState extends State<FoodQuantityScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
+          Center(
+            child: FoodThumbnail(
+              name: food.name,
+              sourceNote: food.sourceNote,
+              imageCategory: food.imageCategory,
+              size: 120,
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             food.name,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(

@@ -8,6 +8,7 @@ import '../services/meal_plan_layout.dart';
 import '../services/personalization_engine.dart';
 import '../theme/macro_colors.dart';
 import '../utils/meal_log_time.dart';
+import '../widgets/food_thumbnail.dart';
 import 'food_search_screen.dart';
 
 class NutritionTab extends StatefulWidget {
@@ -327,6 +328,11 @@ class _NutritionTabState extends State<NutritionTab> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+        leading: FoodThumbnail.fromMeal(
+          mealName: m.name,
+          imageNote: m.imageNote,
+          size: 44,
+        ),
         title: Text(m.name),
         subtitle: Text(
           '${m.calories} kcal · P${m.proteinG.round()} '

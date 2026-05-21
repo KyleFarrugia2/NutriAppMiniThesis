@@ -7,6 +7,7 @@ import '../models/food_reference.dart';
 import '../services/local_food_catalog.dart';
 import '../services/usda_fdc_service.dart';
 import '../theme/macro_colors.dart';
+import '../widgets/food_thumbnail.dart';
 import 'food_quantity_screen.dart';
 
 class FoodSearchScreen extends StatefulWidget {
@@ -202,6 +203,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                     (h) => Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
+                        leading: FoodThumbnail(
+                          name: h.description,
+                          sourceNote: 'fdc:${h.fdcId}',
+                          size: 44,
+                        ),
                         title: Text(
                           h.description,
                           maxLines: 2,
@@ -236,6 +242,12 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                     (f) => Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
+                        leading: FoodThumbnail(
+                          name: f.name,
+                          sourceNote: f.sourceNote,
+                          imageCategory: f.imageCategory,
+                          size: 44,
+                        ),
                         title: Text(
                           f.name,
                           maxLines: 2,

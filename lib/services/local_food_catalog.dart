@@ -14,6 +14,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 3.6,
       sourceNote: 'local:chicken_breast_roasted',
+      imageCategory: 'chicken',
     ),
     FoodReference(
       name: 'Chicken thigh, roasted, skinless',
@@ -216,6 +217,7 @@ class LocalFoodCatalog {
       carbsPer100g: 25,
       fatPer100g: 1.1,
       sourceNote: 'local:pasta_cooked',
+      imageCategory: 'pasta',
     ),
     FoodReference(
       name: 'Spaghetti, enriched, cooked',
@@ -224,6 +226,7 @@ class LocalFoodCatalog {
       carbsPer100g: 31,
       fatPer100g: 0.9,
       sourceNote: 'local:spaghetti_cooked',
+      imageCategory: 'pasta',
     ),
     FoodReference(
       name: 'Whole wheat pasta, cooked',

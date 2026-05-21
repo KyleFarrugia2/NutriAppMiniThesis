@@ -16,6 +16,7 @@ class FoodReference {
     required this.carbsPer100g,
     required this.fatPer100g,
     this.sourceNote,
+    this.imageCategory,
   });
 
   /// USDA FDC identifier when from API; null for built-in catalog rows.
@@ -28,6 +29,9 @@ class FoodReference {
 
   /// e.g. `fdc:12345` or `local:chicken_breast` for [MealEntry.imageNote].
   final String? sourceNote;
+
+  /// Visual category for thumbnails (`chicken`, `pasta`, `fish`, …).
+  final String? imageCategory;
 
   /// Scale macros for [grams] of this food (linear from per-100 g basis).
   ({
