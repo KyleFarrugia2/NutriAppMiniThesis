@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_state.dart';
 import '../models/user_profile.dart';
+import '../widgets/weight_phase_picker.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   const ProfileEditScreen({super.key, required this.app});
@@ -21,7 +22,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   late final TextEditingController _steps;
   late Sex _sex;
   late ActivityLevel _activity;
-  late NutritionGoal _goal;
+  late FitnessGoal _fitnessGoal;
+  late NutritionGoal _weightPhase;
   late WorkoutGuidanceMode _guidanceMode;
 
   @override
@@ -37,7 +39,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     );
     _sex = p.sex;
     _activity = p.activityLevel;
-    _goal = p.goal;
+    _fitnessGoal = p.fitnessGoal;
+    _weightPhase = p.fitnessGoal.asksWeightPhase && p.goal.isWeightPhaseChoice
+        ? p.goal
+        : NutritionGoal.gainMuscle;
     _guidanceMode = p.workoutGuidanceMode;
   }
 
@@ -61,12 +66,24 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       weightKg: double.parse(_weight.text.trim()),
       sex: _sex,
       activityLevel: _activity,
-      goal: _goal,
+      fitnessGoal: _fitnessGoal,
+      goal: UserProfile.resolveNutritionGoal(
+        _fitnessGoal,
+        _fitnessGoal.asksWeightPhase ? _weightPhase : null,
+      ),
       wearableStepsAvg: stepsText.isEmpty ? null : int.tryParse(stepsText),
       workoutGuidanceMode: _guidanceMode,
     );
     await widget.app.updateProfile(profile);
-    if (mounted) Navigator.pop(context);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Profile saved — goals and meal targets updated. Workout plan refreshes when training goal or body changes.',
+        ),
+      ),
+    );
+    Navigator.pop(context);
   }
 
   @override
@@ -162,25 +179,51 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     if (v != null) setState(() => _activity = v);
                   },
                 ),
-                const SizedBox(height: 16),
-                SegmentedButton<NutritionGoal>(
-                  segments: NutritionGoal.values
+                const SizedBox(height: 8),
+                Text(
+                  'Training goal',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<FitnessGoal>(
+                  value: _fitnessGoal,
+                  decoration: const InputDecoration(
+                    labelText: 'What is your goal?',
+                    prefixIcon: Icon(Icons.flag_outlined),
+                  ),
+                  items: FitnessGoal.values
                       .map(
-                        (g) => ButtonSegment(
+                        (g) => DropdownMenuItem(
                           value: g,
-                          label: Text(
-                            g == NutritionGoal.loseWeight
-                                ? 'Lose'
-                                : g == NutritionGoal.maintain
-                                    ? 'Maintain'
-                                    : 'Gain',
-                          ),
+                          child: Text(g.label),
                         ),
                       )
                       .toList(),
-                  selected: {_goal},
-                  onSelectionChanged: (s) => setState(() => _goal = s.first),
+                  onChanged: (v) {
+                    if (v == null) return;
+                    setState(() {
+                      _fitnessGoal = v;
+                      if (!v.asksWeightPhase) return;
+                      if (!_weightPhase.isWeightPhaseChoice) {
+                        _weightPhase = NutritionGoal.gainMuscle;
+                      }
+                    });
+                  },
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _fitnessGoal.subtitle,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                if (_fitnessGoal.asksWeightPhase) ...[
+                  const SizedBox(height: 16),
+                  WeightPhasePicker(
+                    value: _weightPhase,
+                    onChanged: (v) => setState(() => _weightPhase = v),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _steps,

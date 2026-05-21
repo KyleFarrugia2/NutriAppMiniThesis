@@ -6,6 +6,7 @@ import '../app_state.dart';
 import '../models/food_reference.dart';
 import '../models/meal_entry.dart';
 import '../theme/macro_colors.dart';
+import '../utils/egg_portions.dart';
 import '../utils/meal_log_time.dart';
 import '../widgets/food_thumbnail.dart';
 import '../widgets/macro_calorie_chart.dart';
@@ -38,7 +39,33 @@ class FoodQuantityScreen extends StatefulWidget {
 
 class _FoodQuantityScreenState extends State<FoodQuantityScreen> {
   static final _uuid = Uuid();
-  double _grams = 120;
+  late final bool _byPieceCount;
+  late int _pieceCount;
+  late double _grams;
+
+  @override
+  void initState() {
+    super.initState();
+    final food = widget.food;
+    _byPieceCount = EggPortions.isCountedByPiece(food);
+    if (EggPortions.isWholeEgg(food)) {
+      _pieceCount = 2;
+      _grams = EggPortions.gramsForWholeEggCount(_pieceCount);
+    } else if (EggPortions.isEggWhite(food)) {
+      _pieceCount = 1;
+      _grams = 120;
+    } else {
+      _pieceCount = 1;
+      _grams = 120;
+    }
+  }
+
+  void _setPieceCount(int count) {
+    setState(() {
+      _pieceCount = count;
+      _grams = EggPortions.gramsForWholeEggCount(count);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,44 +134,83 @@ class _FoodQuantityScreenState extends State<FoodQuantityScreen> {
             ),
           ),
           const SizedBox(height: 28),
-          Text(
-            'Amount (${_grams.round()} g)',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+          if (_byPieceCount) ...[
+            Text(
+              EggPortions.formatWholeEggs(_pieceCount),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Count whole eggs (≈ ${EggPortions.gramsPerWholeEgg.round()} g each).',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Slider(
+              value: _pieceCount.toDouble(),
+              min: 1,
+              max: 8,
+              divisions: 7,
+              label: EggPortions.formatWholeEggs(_pieceCount),
+              onChanged: (v) => _setPieceCount(v.round()),
+            ),
+            Row(
+              children: [
+                for (final n in [1, 2, 3, 4])
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: OutlinedButton(
+                        onPressed: () => _setPieceCount(n),
+                        child: Text(EggPortions.formatWholeEggs(n)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ] else ...[
+            Text(
+              'Amount (${_grams.round()} g)',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            Slider(
+              value: _grams.clamp(10, 800),
+              min: 10,
+              max: 800,
+              divisions: 158,
+              label: '${_grams.round()} g',
+              onChanged: (v) => setState(() => _grams = v),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _grams = 100),
+                    child: const Text('100 g'),
+                  ),
                 ),
-          ),
-          Slider(
-            value: _grams.clamp(10, 800),
-            min: 10,
-            max: 800,
-            divisions: 158,
-            label: '${_grams.round()} g',
-            onChanged: (v) => setState(() => _grams = v),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => setState(() => _grams = 100),
-                  child: const Text('100 g'),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _grams = 150),
+                    child: const Text('150 g'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => setState(() => _grams = 150),
-                  child: const Text('150 g'),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _grams = 200),
+                    child: const Text('200 g'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => setState(() => _grams = 200),
-                  child: const Text('200 g'),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
           const SizedBox(height: 28),
           Text(
             'This portion',
@@ -200,13 +266,16 @@ class _FoodQuantityScreenState extends State<FoodQuantityScreen> {
               final day = widget.logDay ?? DateTime.now();
               final meal = MealEntry(
                 id: _uuid.v4(),
-                name: '${food.name} (${_grams.round()} g)',
+                name: _byPieceCount
+                    ? EggPortions.mealNameForWholeEggs(_pieceCount)
+                    : '${food.name} (${_grams.round()} g)',
                 calories: scaled.calories,
                 proteinG: scaled.proteinG,
                 carbsG: scaled.carbsG,
                 fatG: scaled.fatG,
                 loggedAt: MealLogTime.onCalendarDay(day),
                 imageNote: food.sourceNote,
+                imageCategory: food.imageCategory,
                 slotKey: widget.slotKey,
               );
               await widget.app.addMeal(meal);

@@ -20,12 +20,14 @@ class FoodThumbnail extends StatelessWidget {
   factory FoodThumbnail.fromMeal({
     required String mealName,
     String? imageNote,
+    String? imageCategory,
     double size = 40,
   }) {
     final baseName = mealName.replaceAll(RegExp(r'\s*\(\d+\s*g\)\s*$'), '');
     return FoodThumbnail(
       name: baseName,
       sourceNote: imageNote,
+      imageCategory: imageCategory,
       size: size,
     );
   }
@@ -38,7 +40,7 @@ class FoodThumbnail extends StatelessWidget {
       imageCategory: imageCategory,
     );
     final radius = size * 0.24;
-    final emojiSize = size * 0.52;
+    final emojiSize = size * 0.58;
     final iconSize = size * 0.44;
 
     return Container(
@@ -61,9 +63,18 @@ class FoodThumbnail extends StatelessWidget {
       ),
       child: Center(
         child: v.usesEmoji
-            ? Text(
-                v.emoji!,
-                style: TextStyle(fontSize: emojiSize, height: 1),
+            ? DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.72),
+                  shape: BoxShape.circle,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(size * 0.06),
+                  child: Text(
+                    v.emoji!,
+                    style: TextStyle(fontSize: emojiSize, height: 1),
+                  ),
+                ),
               )
             : Icon(
                 v.icon ?? Icons.restaurant_rounded,

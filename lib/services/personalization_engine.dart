@@ -28,11 +28,6 @@ class PersonalizationEngine {
 
   double tdee(UserProfile p) => bmr(p) * p.activityLevel.multiplier;
 
-  int dailyCalorieTarget(UserProfile p) {
-    final raw = tdee(p) + p.goal.calorieDeltaFromTdee();
-    return raw.round().clamp(1200, 6000);
-  }
-
   /// Calorie target for a calendar day given training vs rest layout.
   /// Rest days are ~10% below the profile baseline; training days ~10% above
   /// (extra fuel around sessions; lighter days on rest).
@@ -42,16 +37,34 @@ class PersonalizationEngine {
     return scaled.round().clamp(1200, 6000);
   }
 
-  /// Grams per kg bodyweight targets (simple heuristic by goal).
+  /// Grams per kg bodyweight targets (fitness goal + lose/gain when applicable).
   ({double protein, double carbs, double fat}) macroTargetsPerKg(UserProfile p) {
-    switch (p.goal) {
-      case NutritionGoal.loseWeight:
-        return (protein: 2.0, carbs: 4.0, fat: 0.7);
-      case NutritionGoal.maintain:
+    if (p.goal == NutritionGoal.loseWeight) {
+      return (protein: 2.1, carbs: 3.5, fat: 0.65);
+    }
+    switch (p.fitnessGoal) {
+      case FitnessGoal.loseWeight:
+        return (protein: 2.1, carbs: 3.5, fat: 0.65);
+      case FitnessGoal.stayFit:
         return (protein: 1.8, carbs: 5.0, fat: 0.8);
-      case NutritionGoal.gainMuscle:
+      case FitnessGoal.bodybuilding:
+        return (protein: 2.3, carbs: 5.0, fat: 0.85);
+      case FitnessGoal.powerlifting:
+        return (protein: 2.0, carbs: 4.5, fat: 0.9);
+      case FitnessGoal.powerBuilding:
         return (protein: 2.2, carbs: 5.5, fat: 0.9);
     }
+  }
+
+  int dailyCalorieTarget(UserProfile p) {
+    var delta = p.goal.calorieDeltaFromTdee();
+    if (p.goal == NutritionGoal.gainMuscle &&
+        (p.fitnessGoal == FitnessGoal.powerlifting ||
+            p.fitnessGoal == FitnessGoal.powerBuilding)) {
+      delta += 100;
+    }
+    final raw = tdee(p) + delta;
+    return raw.round().clamp(1200, 6000);
   }
 
   MacroTotals macroGramTargets(UserProfile p) {
@@ -126,8 +139,8 @@ class PersonalizationEngine {
 
   /// Non-sequential baseline: same template from goal only (no log history).
   WorkoutRecommendation _nonSequentialSuggestion(UserProfile p) {
-    switch (p.goal) {
-      case NutritionGoal.loseWeight:
+    switch (p.fitnessGoal) {
+      case FitnessGoal.loseWeight:
         return const WorkoutRecommendation(
           title: 'Baseline: steady-state cardio (35 min)',
           type: WorkoutType.cardio,
@@ -135,15 +148,31 @@ class PersonalizationEngine {
               'Non-sequential baseline — generic cardio template from goal only; does not read your recent logs (RQ2 comparison).',
           intensityHint: 'Moderate pace; same suggestion regardless of prior sessions.',
         );
-      case NutritionGoal.gainMuscle:
+      case FitnessGoal.bodybuilding:
         return const WorkoutRecommendation(
-          title: 'Baseline: standard push session (40 min)',
+          title: 'Baseline: machine hypertrophy (45 min)',
           type: WorkoutType.strength,
           rationale:
-              'Non-sequential baseline — generic strength template from goal only; ignores training history.',
-          intensityHint: 'Fixed template for benchmark comparison, not personalized sequencing.',
+              'Non-sequential baseline — machine-focused template for bodybuilding; ignores training history.',
+          intensityHint: 'Pec deck, leg press, cables — no barbell bench in this template.',
         );
-      case NutritionGoal.maintain:
+      case FitnessGoal.powerlifting:
+        return const WorkoutRecommendation(
+          title: 'Baseline: squat + bench (50 min)',
+          type: WorkoutType.strength,
+          rationale:
+              'Non-sequential baseline — powerlifting pattern from goal only.',
+          intensityHint: 'Heavy compounds; long rest between work sets.',
+        );
+      case FitnessGoal.powerBuilding:
+        return const WorkoutRecommendation(
+          title: 'Baseline: squat + machine pump (50 min)',
+          type: WorkoutType.strength,
+          rationale:
+              'Non-sequential baseline — strength plus hypertrophy accessories.',
+          intensityHint: 'Main lift heavy, accessories moderate volume.',
+        );
+      case FitnessGoal.stayFit:
         return const WorkoutRecommendation(
           title: 'Baseline: mixed conditioning (40 min)',
           type: WorkoutType.cardio,
@@ -229,14 +258,23 @@ class PersonalizationEngine {
       );
     }
 
+    final title = switch (p.fitnessGoal) {
+      FitnessGoal.bodybuilding => p.sex == Sex.female
+          ? 'Glutes & legs (machine focus)'
+          : 'Machine push / pull split day',
+      FitnessGoal.powerlifting => 'Heavy squat or deadlift day',
+      FitnessGoal.powerBuilding => 'Main lift + hypertrophy accessories',
+      FitnessGoal.loseWeight => 'Circuit: strength + cardio finishers',
+      FitnessGoal.stayFit => 'Full-body strength + core',
+    };
     return WorkoutRecommendation(
-      title: p.goal == NutritionGoal.gainMuscle
-          ? 'Progressive overload lower session'
-          : 'Mixed circuit: strength + short intervals',
+      title: title,
       type: WorkoutType.strength,
       rationale:
-          'Balanced default based on your profile and recent training mix.',
-      intensityHint: 'Log RPE after the session to tune next recommendations.',
+          'Balanced default from your ${p.fitnessGoal.label} goal, sex, age (${p.age}), and recent training mix.',
+      intensityHint: p.age >= 50
+          ? 'Prioritize form; leave 1–2 reps in reserve on most sets.'
+          : 'Log RPE after the session to tune next recommendations.',
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'local_food_catalog.dart';
+
 /// Minimal cartoon tile: pastel background + emoji and/or icon.
 class FoodCategoryVisual {
   const FoodCategoryVisual({
@@ -37,6 +39,14 @@ class FoodImageResolver {
     'blueberry': FoodCategoryVisual(
       emoji: '🫐',
       background: Color(0xFFE8EAF6),
+    ),
+    'raspberry': FoodCategoryVisual(
+      emoji: '🍓',
+      background: Color(0xFFFCE4EC),
+    ),
+    'blackberry': FoodCategoryVisual(
+      emoji: '🫐',
+      background: Color(0xFFEDE7F6),
     ),
     'strawberry': FoodCategoryVisual(
       emoji: '🍓',
@@ -235,18 +245,26 @@ class FoodImageResolver {
     if (imageCategory != null && imageCategory.isNotEmpty) {
       return imageCategory;
     }
+    final fromCatalog = LocalFoodCatalog.imageCategoryForSourceNote(sourceNote);
+    if (fromCatalog != null && fromCatalog.isNotEmpty) {
+      return fromCatalog;
+    }
+    final fromSlug = _categoryFromLocalSlug(sourceNote);
+    if (fromSlug != null) return fromSlug;
+
     final n = name.toLowerCase();
     final id = sourceNote?.toLowerCase() ?? '';
     final blob = '$n $id';
 
-    // Fruits — specific before generic
+    // Fruits — specific before generic (never lump all fruit under apple)
     if (blob.contains('strawberr')) return 'strawberry';
     if (blob.contains('blueberr')) return 'blueberry';
-    if (blob.contains('raspberr') || blob.contains('blackberr')) {
-      return 'strawberry';
-    }
+    if (blob.contains('raspberr')) return 'raspberry';
+    if (blob.contains('blackberr')) return 'blackberry';
     if (blob.contains('banana')) return 'banana';
-    if (blob.contains('apple') && !blob.contains('pineapple')) return 'apple';
+    if (blob.contains('pineapple')) return 'pineapple';
+    if (blob.contains('grapefruit')) return 'orange';
+    if (blob.contains('apple')) return 'apple';
     if (blob.contains('orange') && !blob.contains('pepper')) return 'orange';
     if (blob.contains('grape')) return 'grape';
     if (blob.contains('watermelon')) return 'watermelon';
@@ -255,7 +273,9 @@ class FoodImageResolver {
     if (blob.contains('peach')) return 'peach';
     if (blob.contains('lemon') || blob.contains('lime')) return 'lemon';
     if (blob.contains('cherry')) return 'cherry';
-    if (blob.contains('pineapple')) return 'pineapple';
+    if (blob.contains('pear')) return 'peach';
+    if (blob.contains('kiwi')) return 'fruit';
+    if (blob.contains('plum')) return 'peach';
 
     // Protein powder before generic protein
     if (blob.contains('protein') && blob.contains('powder')) {
@@ -380,6 +400,28 @@ class FoodImageResolver {
     }
 
     return 'default';
+  }
+
+  /// Maps `local:banana`, `local:blueberries`, etc. when [FoodReference.imageCategory] is unset.
+  static String? _categoryFromLocalSlug(String? sourceNote) {
+    if (sourceNote == null || !sourceNote.startsWith('local:')) return null;
+    final s = sourceNote.substring(6);
+    if (s.contains('strawberr')) return 'strawberry';
+    if (s.contains('blueberr')) return 'blueberry';
+    if (s.contains('raspberr')) return 'raspberry';
+    if (s.contains('blackberr')) return 'blackberry';
+    if (s.contains('banana')) return 'banana';
+    if (s.contains('pineapple')) return 'pineapple';
+    if (s.contains('watermelon')) return 'watermelon';
+    if (s.contains('avocado')) return 'avocado';
+    if (s.contains('orange')) return 'orange';
+    if (s.contains('grape')) return 'grape';
+    if (s.contains('apple')) return 'apple';
+    if (s.contains('mango')) return 'mango';
+    if (s.contains('peach')) return 'peach';
+    if (s.contains('cherry')) return 'cherry';
+    if (s.contains('lemon') || s.contains('lime')) return 'lemon';
+    return null;
   }
 
   static FoodCategoryVisual visualFor(

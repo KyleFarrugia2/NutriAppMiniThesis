@@ -1,3 +1,5 @@
+import 'workout_split_style.dart';
+
 enum Sex { male, female, other }
 
 enum ActivityLevel {
@@ -9,6 +11,73 @@ enum ActivityLevel {
 }
 
 enum NutritionGoal { loseWeight, maintain, gainMuscle }
+
+/// Primary training + lifestyle goal (drives weekly plan and macro emphasis).
+enum FitnessGoal {
+  stayFit,
+  loseWeight,
+  bodybuilding,
+  powerlifting,
+  powerBuilding,
+}
+
+extension FitnessGoalX on FitnessGoal {
+  String get label {
+    switch (this) {
+      case FitnessGoal.stayFit:
+        return 'Stay fit';
+      case FitnessGoal.loseWeight:
+        return 'Lose weight';
+      case FitnessGoal.bodybuilding:
+        return 'Bodybuilding';
+      case FitnessGoal.powerlifting:
+        return 'Powerlifting';
+      case FitnessGoal.powerBuilding:
+        return 'Powerbuilding';
+    }
+  }
+
+  String get subtitle {
+    switch (this) {
+      case FitnessGoal.stayFit:
+        return 'Balanced strength, cardio, and mobility';
+      case FitnessGoal.loseWeight:
+        return 'More conditioning and full-body circuits';
+      case FitnessGoal.bodybuilding:
+        return 'Hypertrophy — machine & cable focus';
+      case FitnessGoal.powerlifting:
+        return 'Squat, bench, deadlift strength';
+      case FitnessGoal.powerBuilding:
+        return 'Heavy compounds plus muscle-building accessories';
+    }
+  }
+
+  /// Bodybuilding, powerlifting, and powerbuilding need an explicit lose vs gain choice.
+  bool get asksWeightPhase =>
+      this == FitnessGoal.bodybuilding ||
+      this == FitnessGoal.powerlifting ||
+      this == FitnessGoal.powerBuilding;
+
+  /// Calorie direction when [asksWeightPhase] is false.
+  NutritionGoal get defaultNutritionGoal {
+    switch (this) {
+      case FitnessGoal.stayFit:
+        return NutritionGoal.maintain;
+      case FitnessGoal.loseWeight:
+        return NutritionGoal.loseWeight;
+      case FitnessGoal.bodybuilding:
+      case FitnessGoal.powerlifting:
+      case FitnessGoal.powerBuilding:
+        return NutritionGoal.gainMuscle;
+    }
+  }
+}
+
+extension NutritionGoalWeightPhaseX on NutritionGoal {
+  /// Lose or gain only (for lifting-style goals).
+  bool get isWeightPhaseChoice =>
+      this == NutritionGoal.loseWeight || this == NutritionGoal.gainMuscle;
+}
 
 /// Minimum average daily steps recommended in-app for every nutrition goal.
 const int kRecommendedMinDailySteps = 8000;
@@ -99,17 +168,33 @@ extension NutritionGoalX on NutritionGoal {
 }
 
 class UserProfile {
-  const UserProfile({
+  UserProfile({
     required this.displayName,
     required this.age,
     required this.heightCm,
     required this.weightKg,
     required this.sex,
     required this.activityLevel,
-    required this.goal,
+    required this.fitnessGoal,
+    NutritionGoal? goal,
     this.wearableStepsAvg,
     this.workoutGuidanceMode = WorkoutGuidanceMode.adaptive,
-  });
+    this.workoutSplitStyle = WorkoutSplitStyle.goalDefault,
+  }) : goal = UserProfile.resolveNutritionGoal(fitnessGoal, goal);
+
+  /// Picks stored [goal] or defaults from [fitnessGoal].
+  static NutritionGoal resolveNutritionGoal(
+    FitnessGoal fitnessGoal,
+    NutritionGoal? goal,
+  ) {
+    if (fitnessGoal.asksWeightPhase) {
+      if (goal == NutritionGoal.loseWeight || goal == NutritionGoal.gainMuscle) {
+        return goal!;
+      }
+      return NutritionGoal.gainMuscle;
+    }
+    return fitnessGoal.defaultNutritionGoal;
+  }
 
   final String displayName;
   final int age;
@@ -117,6 +202,9 @@ class UserProfile {
   final double weightKg;
   final Sex sex;
   final ActivityLevel activityLevel;
+  final FitnessGoal fitnessGoal;
+
+  /// Derived from [fitnessGoal] for calorie/macro math (kept for storage compat).
   final NutritionGoal goal;
 
   /// Optional average daily steps (e.g. from a wearable) for activity-aware copy.
@@ -125,6 +213,9 @@ class UserProfile {
   /// How the next workout suggestion is produced (thesis comparison).
   final WorkoutGuidanceMode workoutGuidanceMode;
 
+  /// Weekly layout (PPL, upper/lower, full body, …). Regenerate anytime on Workouts.
+  final WorkoutSplitStyle workoutSplitStyle;
+
   UserProfile copyWith({
     String? displayName,
     int? age,
@@ -132,10 +223,13 @@ class UserProfile {
     double? weightKg,
     Sex? sex,
     ActivityLevel? activityLevel,
+    FitnessGoal? fitnessGoal,
     NutritionGoal? goal,
     int? wearableStepsAvg,
     WorkoutGuidanceMode? workoutGuidanceMode,
+    WorkoutSplitStyle? workoutSplitStyle,
   }) {
+    final fg = fitnessGoal ?? this.fitnessGoal;
     return UserProfile(
       displayName: displayName ?? this.displayName,
       age: age ?? this.age,
@@ -143,9 +237,11 @@ class UserProfile {
       weightKg: weightKg ?? this.weightKg,
       sex: sex ?? this.sex,
       activityLevel: activityLevel ?? this.activityLevel,
-      goal: goal ?? this.goal,
+      fitnessGoal: fg,
+      goal: goal ?? resolveNutritionGoal(fg, this.goal),
       wearableStepsAvg: wearableStepsAvg ?? this.wearableStepsAvg,
       workoutGuidanceMode: workoutGuidanceMode ?? this.workoutGuidanceMode,
+      workoutSplitStyle: workoutSplitStyle ?? this.workoutSplitStyle,
     );
   }
 
@@ -156,12 +252,44 @@ class UserProfile {
         'weightKg': weightKg,
         'sex': sex.name,
         'activityLevel': activityLevel.name,
+        'fitnessGoal': fitnessGoal.name,
         'goal': goal.name,
         'wearableStepsAvg': wearableStepsAvg,
         'workoutGuidanceMode': workoutGuidanceMode.name,
+        'workoutSplitStyle': workoutSplitStyle.name,
       };
 
+  static FitnessGoal _fitnessGoalFromJson(Map<String, dynamic> j) {
+    final raw = j['fitnessGoal'] as String?;
+    if (raw != null) {
+      return FitnessGoal.values.firstWhere(
+        (e) => e.name == raw,
+        orElse: () => FitnessGoal.stayFit,
+      );
+    }
+    final legacy = NutritionGoal.values.firstWhere(
+      (e) => e.name == j['goal'],
+      orElse: () => NutritionGoal.maintain,
+    );
+    return switch (legacy) {
+      NutritionGoal.loseWeight => FitnessGoal.loseWeight,
+      NutritionGoal.gainMuscle => FitnessGoal.bodybuilding,
+      NutritionGoal.maintain => FitnessGoal.stayFit,
+    };
+  }
+
   static UserProfile fromJson(Map<String, dynamic> j) {
+    final fitnessGoal = _fitnessGoalFromJson(j);
+    NutritionGoal? storedGoal;
+    final goalRaw = j['goal'] as String?;
+    if (goalRaw != null) {
+      for (final e in NutritionGoal.values) {
+        if (e.name == goalRaw) {
+          storedGoal = e;
+          break;
+        }
+      }
+    }
     return UserProfile(
       displayName: j['displayName'] as String? ?? 'User',
       age: (j['age'] as num?)?.toInt() ?? 30,
@@ -175,14 +303,16 @@ class UserProfile {
         (e) => e.name == j['activityLevel'],
         orElse: () => ActivityLevel.moderate,
       ),
-      goal: NutritionGoal.values.firstWhere(
-        (e) => e.name == j['goal'],
-        orElse: () => NutritionGoal.maintain,
-      ),
+      fitnessGoal: fitnessGoal,
+      goal: resolveNutritionGoal(fitnessGoal, storedGoal),
       wearableStepsAvg: (j['wearableStepsAvg'] as num?)?.toInt(),
       workoutGuidanceMode: WorkoutGuidanceMode.values.firstWhere(
         (e) => e.name == j['workoutGuidanceMode'],
         orElse: () => WorkoutGuidanceMode.adaptive,
+      ),
+      workoutSplitStyle: WorkoutSplitStyle.values.firstWhere(
+        (e) => e.name == j['workoutSplitStyle'],
+        orElse: () => WorkoutSplitStyle.goalDefault,
       ),
     );
   }

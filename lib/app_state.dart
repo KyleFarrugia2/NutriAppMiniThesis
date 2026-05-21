@@ -6,9 +6,13 @@ import 'models/research_study_record.dart';
 import 'models/user_profile.dart';
 import 'models/workout_entry.dart';
 import 'models/weekly_workout_program.dart';
+import 'services/meal_suggestion_service.dart';
 import 'services/personalization_engine.dart';
 import 'services/progression_service.dart';
 import 'services/storage_repository.dart';
+import 'models/workout_split_style.dart';
+import 'services/workout_plan_builder.dart';
+import 'utils/meal_log_time.dart';
 
 /// Stored on [WorkoutEntry.logSource] for mirrored program completions.
 const String kWeeklyProgramLogSource = 'weekly_program';
@@ -17,11 +21,14 @@ class AppState extends ChangeNotifier {
   AppState({
     StorageRepository? storage,
     PersonalizationEngine? engine,
+    MealSuggestionService? mealSuggestions,
   })  : _storage = storage ?? StorageRepository(),
-        _engine = engine ?? const PersonalizationEngine();
+        _engine = engine ?? const PersonalizationEngine(),
+        _mealSuggestions = mealSuggestions ?? MealSuggestionService();
 
   final StorageRepository _storage;
   final PersonalizationEngine _engine;
+  final MealSuggestionService _mealSuggestions;
   final _uuid = Uuid();
 
   UserProfile? profile;
@@ -116,13 +123,89 @@ class AppState extends ChangeNotifier {
   Future<void> completeOnboarding(UserProfile p) async {
     profile = p;
     await _storage.saveProfile(p);
+    try {
+      await _applyProfileWorkoutPlan(p);
+    } catch (e, st) {
+      debugPrint('Workout plan build failed: $e\n$st');
+      weeklyPlan = WeeklyWorkoutPlan.defaultSuggested();
+      await _storage.saveWeeklyWorkoutPlan(weeklyPlan);
+    }
     notifyListeners();
   }
 
   Future<void> updateProfile(UserProfile p) async {
+    final regenPlan = profile == null ||
+        profile!.fitnessGoal != p.fitnessGoal ||
+        profile!.sex != p.sex ||
+        profile!.age != p.age ||
+        profile!.goal != p.goal ||
+        profile!.workoutSplitStyle != p.workoutSplitStyle;
     profile = p;
     await _storage.saveProfile(p);
+    if (regenPlan) await _applyProfileWorkoutPlan(p);
     notifyListeners();
+  }
+
+  /// Replace the weekly template (e.g. PPL → upper/lower). Safe to run repeatedly.
+  Future<void> regenerateWorkoutPlan({WorkoutSplitStyle? split}) async {
+    final p = profile;
+    if (p == null) return;
+    final updated =
+        split != null ? p.copyWith(workoutSplitStyle: split) : p;
+    profile = updated;
+    await _storage.saveProfile(updated);
+    try {
+      await _applyProfileWorkoutPlan(updated);
+    } catch (e, st) {
+      debugPrint('Workout plan regen failed: $e\n$st');
+      weeklyPlan = WeeklyWorkoutPlan.defaultSuggested();
+      await _storage.saveWeeklyWorkoutPlan(weeklyPlan);
+    }
+    notifyListeners();
+  }
+
+  Future<void> _applyProfileWorkoutPlan(UserProfile p) async {
+    weeklyPlan = WorkoutPlanBuilder.buildFor(p);
+    await _storage.saveWeeklyWorkoutPlan(weeklyPlan);
+  }
+
+  Map<String, SuggestedMeal> mealSuggestionsForDay(DateTime day) {
+    final p = profile;
+    if (p == null) return {};
+    return _mealSuggestions.suggestionsForDay(
+      profile: p,
+      trainingDay: isTrainingDay(day),
+    );
+  }
+
+  SuggestedMeal? mealSuggestionForSlot(DateTime day, String slotId) {
+    return mealSuggestionsForDay(day)[slotId];
+  }
+
+  Future<void> acceptSuggestedMeal({
+    required DateTime logDay,
+    required SuggestedMeal suggestion,
+  }) async {
+    final existing = _engine
+        .mealsForDay(meals, logDay)
+        .where((m) => m.slotKey == suggestion.slotId)
+        .toList();
+    for (final m in existing) {
+      await removeMeal(m.id);
+    }
+    final meal = MealEntry(
+      id: _uuid.v4(),
+      name: '${suggestion.title} — ${suggestion.summaryLine}',
+      calories: suggestion.totalCalories,
+      proteinG: suggestion.totalProteinG,
+      carbsG: suggestion.totalCarbsG,
+      fatG: suggestion.totalFatG,
+      loggedAt: MealLogTime.onCalendarDay(logDay),
+      imageNote: 'suggested:${suggestion.slotId}',
+      imageCategory: null,
+      slotKey: suggestion.slotId,
+    );
+    await addMeal(meal);
   }
 
   Future<void> addMeal(MealEntry m) async {

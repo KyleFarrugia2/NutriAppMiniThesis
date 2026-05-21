@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../app_state.dart';
 import '../models/meal_entry.dart';
 import '../services/meal_plan_layout.dart';
+import '../services/meal_suggestion_service.dart';
 import '../services/personalization_engine.dart';
 import '../theme/macro_colors.dart';
 import '../utils/meal_log_time.dart';
@@ -331,6 +332,7 @@ class _NutritionTabState extends State<NutritionTab> {
         leading: FoodThumbnail.fromMeal(
           mealName: m.name,
           imageNote: m.imageNote,
+          imageCategory: m.imageCategory,
           size: 44,
         ),
         title: Text(m.name),
@@ -358,6 +360,8 @@ class _NutritionTabState extends State<NutritionTab> {
     final sug = targets == null
         ? null
         : MealSlotDef.suggestedMacros(slot: slot, targets: targets);
+    final mealSug = app.mealSuggestionForSlot(logDay, slot.id);
+    final slotEmpty = inSlot.isEmpty;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -428,6 +432,69 @@ class _NutritionTabState extends State<NutritionTab> {
               Text(
                 'Complete your profile for per-slot targets.',
                 style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+            if (mealSug != null && slotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cs.tertiaryContainer.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.restaurant_menu, size: 18, color: cs.tertiary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            mealSug.title,
+                            style: tt.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: cs.onTertiaryContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      mealSug.summaryLine,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onTertiaryContainer,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '~${mealSug.totalCalories} kcal · P${mealSug.totalProteinG.round()} · '
+                      'C${mealSug.totalCarbsG.round()} · F${mealSug.totalFatG.round()}',
+                      style: tt.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: cs.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: () async {
+                        await app.acceptSuggestedMeal(
+                          logDay: logDay,
+                          suggestion: mealSug,
+                        );
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Logged ${slot.title}')),
+                        );
+                      },
+                      icon: const Icon(Icons.check_circle_outline, size: 20),
+                      label: const Text('Accept & log meal'),
+                    ),
+                  ],
+                ),
               ),
             ],
             const Divider(height: 20),
@@ -698,6 +765,9 @@ class _NutritionTabState extends State<NutritionTab> {
     if (note == 'manual') {
       return const Icon(Icons.edit_note_outlined, size: 22);
     }
+    if (note.startsWith('suggested:')) {
+      return const Icon(Icons.auto_awesome, size: 22);
+    }
     if (note.startsWith('fdc:') || note.startsWith('local:')) {
       return const Icon(Icons.verified_outlined, size: 22);
     }
@@ -729,6 +799,13 @@ class _NutritionTabState extends State<NutritionTab> {
         final extraMeals = inSlot('extra');
         final unassigned =
             dayMeals.where((m) => m.slotKey == null).toList();
+
+        final allSuggestions = profile != null
+            ? app.mealSuggestionsForDay(_selectedDay)
+            : <String, SuggestedMeal>{};
+        final emptySlotsWithSug = slots
+            .where((s) => inSlot(s.id).isEmpty && allSuggestions.containsKey(s.id))
+            .toList();
 
         return Scaffold(
           body: CustomScrollView(
@@ -936,6 +1013,33 @@ class _NutritionTabState extends State<NutritionTab> {
                       training ? 'Training day slots' : 'Rest day slots',
                       style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
+                    if (emptySlotsWithSug.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      FilledButton.icon(
+                        onPressed: () async {
+                          for (final s in emptySlotsWithSug) {
+                            final sug = allSuggestions[s.id];
+                            if (sug == null) continue;
+                            await app.acceptSuggestedMeal(
+                              logDay: _selectedDay,
+                              suggestion: sug,
+                            );
+                          }
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Logged ${emptySlotsWithSug.length} suggested meals',
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.done_all),
+                        label: Text(
+                          'Accept all ${emptySlotsWithSug.length} suggested meals',
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     ...slots.map(
                       (s) => _slotCard(

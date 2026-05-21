@@ -59,7 +59,15 @@ class ProfileTab extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          Chip(label: Text(p.goal.label)),
+                          Chip(label: Text(p.fitnessGoal.label)),
+                          if (p.fitnessGoal.asksWeightPhase)
+                            Chip(
+                              label: Text(
+                                p.goal == NutritionGoal.loseWeight
+                                    ? 'Losing weight'
+                                    : 'Gaining weight',
+                              ),
+                            ),
                           Chip(label: Text(p.activityLevel.label)),
                           if (p.wearableStepsAvg != null)
                             Chip(
@@ -160,7 +168,9 @@ class ProfileTab extends StatelessWidget {
                     const Divider(height: 1),
                     ListTile(
                       title: const Text('Daily calorie target'),
-                      subtitle: Text('Goal offset applied: ${p.goal.label}'),
+                      subtitle: Text(
+                        '${p.fitnessGoal.label} · ${p.goal.label}',
+                      ),
                       trailing: Text(
                         '$cal',
                         style: Theme.of(context).textTheme.titleMedium,

@@ -6,8 +6,10 @@ import '../app_state.dart';
 import '../models/user_profile.dart';
 import '../models/weekly_workout_program.dart';
 import '../models/workout_entry.dart';
+import '../models/workout_split_style.dart';
 import '../utils/week_utils.dart';
 import 'edit_weekly_plan_screen.dart';
+import 'regenerate_workout_plan_screen.dart';
 import 'workout_day_screen.dart';
 
 class WorkoutTab extends StatefulWidget {
@@ -203,6 +205,21 @@ class _WorkoutTabState extends State<WorkoutTab> {
             title: const Text('Workouts'),
             actions: [
               IconButton(
+                tooltip: 'Generate a different split',
+                icon: const Icon(Icons.autorenew),
+                onPressed: profile == null
+                    ? null
+                    : () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                RegenerateWorkoutPlanScreen(app: app),
+                          ),
+                        );
+                      },
+              ),
+              IconButton(
                 tooltip: 'Edit weekly split',
                 icon: const Icon(Icons.edit_calendar_outlined),
                 onPressed: () {
@@ -251,7 +268,9 @@ class _WorkoutTabState extends State<WorkoutTab> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Text(
-                              'This is a suggested workout program only. You can change it however you like — use the calendar (edit) button above to adjust your week, exercises, and rest days. Tap close to hide this note.',
+                              '${kRecoveryRestDaysMessage} '
+                              'Tap the regenerate icon to switch splits (PPL, upper/lower, full body, …) as often as you like, '
+                              'or use the calendar button to edit days. Tap close to hide.',
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSecondaryContainer,
                                 height: 1.4,
@@ -297,6 +316,23 @@ class _WorkoutTabState extends State<WorkoutTab> {
                 'Tap a day to train. Each new week: empty weight/reps fields — last week shows as hints only.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.35),
               ),
+              if (profile != null) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => RegenerateWorkoutPlanScreen(app: app),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.autorenew, size: 20),
+                  label: Text(
+                    'Not for you? Try another split (${profile.workoutSplitStyle.label})',
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               SizedBox(
                 height: 118,

@@ -8,6 +8,7 @@ class MealEntry {
     required this.fatG,
     required this.loggedAt,
     this.imageNote,
+    this.imageCategory,
     this.slotKey,
   });
 
@@ -22,6 +23,9 @@ class MealEntry {
   /// Optional tag for how the meal was logged (e.g. manual, USDA id, local catalog).
   final String? imageNote;
 
+  /// Thumbnail category (`banana`, `blueberry`, `chicken`, …) when known at log time.
+  final String? imageCategory;
+
   /// Daily plan slot: `m1`…`m5`, `pre`, `post`, or `extra` for add-on meals.
   final String? slotKey;
 
@@ -34,6 +38,7 @@ class MealEntry {
         'fatG': fatG,
         'loggedAt': loggedAt.toIso8601String(),
         'imageNote': imageNote,
+        'imageCategory': imageCategory,
         'slotKey': slotKey,
       };
 
@@ -47,6 +52,7 @@ class MealEntry {
       fatG: (j['fatG'] as num).toDouble(),
       loggedAt: DateTime.parse(j['loggedAt'] as String),
       imageNote: j['imageNote'] as String?,
+      imageCategory: j['imageCategory'] as String?,
       slotKey: j['slotKey'] as String?,
     );
   }

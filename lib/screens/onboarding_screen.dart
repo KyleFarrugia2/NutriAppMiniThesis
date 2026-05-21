@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_state.dart';
 import '../models/user_profile.dart';
+import '../widgets/weight_phase_picker.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.app});
@@ -22,7 +23,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Sex _sex = Sex.other;
   ActivityLevel _activity = ActivityLevel.moderate;
-  NutritionGoal _goal = NutritionGoal.maintain;
+  FitnessGoal _fitnessGoal = FitnessGoal.stayFit;
+  NutritionGoal _weightPhase = NutritionGoal.gainMuscle;
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -35,19 +38,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_form.currentState!.validate()) return;
-    final stepsText = _steps.text.trim();
-    final profile = UserProfile(
-      displayName: _name.text.trim(),
-      age: int.parse(_age.text.trim()),
-      heightCm: double.parse(_height.text.trim()),
-      weightKg: double.parse(_weight.text.trim()),
-      sex: _sex,
-      activityLevel: _activity,
-      goal: _goal,
-      wearableStepsAvg: stepsText.isEmpty ? null : int.tryParse(stepsText),
-    );
-    await widget.app.completeOnboarding(profile);
+    final form = _form.currentState;
+    if (form == null) return;
+    if (!form.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fix the highlighted fields above.'),
+        ),
+      );
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final stepsText = _steps.text.trim();
+      final profile = UserProfile(
+        displayName: _name.text.trim(),
+        age: int.parse(_age.text.trim()),
+        heightCm: double.parse(_height.text.trim()),
+        weightKg: double.parse(_weight.text.trim()),
+        sex: _sex,
+        activityLevel: _activity,
+        fitnessGoal: _fitnessGoal,
+        goal: UserProfile.resolveNutritionGoal(
+          _fitnessGoal,
+          _fitnessGoal.asksWeightPhase ? _weightPhase : null,
+        ),
+        wearableStepsAvg: stepsText.isEmpty ? null : int.tryParse(stepsText),
+      );
+      await widget.app.completeOnboarding(profile);
+      if (!mounted) return;
+      if (widget.app.profile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save your profile. Please try again.'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Something went wrong: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -72,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'We use your profile to estimate energy needs, macro targets, and explainable workout suggestions. You can edit this anytime.',
+                  'We build your weekly workout plan, macro targets, and ready-made meal suggestions from your profile.',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -155,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                Text('Sex (for BMR estimate)',
+                Text('Sex (for BMR & training focus)',
                     style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 SegmentedButton<Sex>(
@@ -167,6 +201,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   selected: {_sex},
                   onSelectionChanged: (s) => setState(() => _sex = s.first),
                 ),
+                if (_sex == Sex.female) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Female plans emphasize legs & glutes with age-adjusted volume.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.primary,
+                        ),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 Text('Activity level',
                     style: Theme.of(context).textTheme.titleSmall),
@@ -189,29 +232,100 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     if (v != null) setState(() => _activity = v);
                   },
                 ),
-                const SizedBox(height: 20),
-                Text('Primary goal',
-                    style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: 8),
-                SegmentedButton<NutritionGoal>(
-                  segments: NutritionGoal.values
-                      .map(
-                        (g) => ButtonSegment(
-                          value: g,
-                          label: Text(
-                            g == NutritionGoal.loseWeight
-                                ? 'Lose'
-                                : g == NutritionGoal.maintain
-                                    ? 'Maintain'
-                                    : 'Gain',
+                const SizedBox(height: 24),
+                Text(
+                  'What is your goal?',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'This shapes your weekly workouts and meal suggestions.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                ...FitnessGoal.values.map((g) {
+                  final selected = _fitnessGoal == g;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Material(
+                      color: selected
+                          ? cs.primaryContainer
+                          : cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => setState(() {
+                          _fitnessGoal = g;
+                          if (g.asksWeightPhase &&
+                              !_weightPhase.isWeightPhaseChoice) {
+                            _weightPhase = NutritionGoal.gainMuscle;
+                          }
+                        }),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                selected
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_off,
+                                color: selected ? cs.primary : cs.outline,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      g.label,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: selected
+                                                ? cs.onPrimaryContainer
+                                                : cs.onSurface,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      g.subtitle,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: selected
+                                                ? cs.onPrimaryContainer
+                                                : cs.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      )
-                      .toList(),
-                  selected: {_goal},
-                  onSelectionChanged: (s) => setState(() => _goal = s.first),
-                ),
-                const SizedBox(height: 20),
+                      ),
+                    ),
+                  );
+                }),
+                if (_fitnessGoal.asksWeightPhase) ...[
+                  const SizedBox(height: 20),
+                  WeightPhasePicker(
+                    value: _weightPhase,
+                    onChanged: (v) => setState(() => _weightPhase = v),
+                  ),
+                ],
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _steps,
                   keyboardType: TextInputType.number,
@@ -225,11 +339,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 32),
                 FilledButton(
-                  onPressed: _submit,
+                  onPressed: _saving ? null : _submit,
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Save profile & continue'),
+                  child: _saving
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Build my plan & continue'),
                 ),
               ],
             ),

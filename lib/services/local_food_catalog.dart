@@ -23,6 +23,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 9,
       sourceNote: 'local:chicken_thigh',
+      imageCategory: 'chicken',
     ),
     FoodReference(
       name: 'Turkey breast, roasted',
@@ -31,6 +32,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 1,
       sourceNote: 'local:turkey_breast',
+      imageCategory: 'turkey',
     ),
     FoodReference(
       name: 'Egg, whole, raw',
@@ -39,6 +41,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0.7,
       fatPer100g: 9.5,
       sourceNote: 'local:egg_whole',
+      imageCategory: 'egg',
     ),
     FoodReference(
       name: 'Egg white, raw',
@@ -47,6 +50,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0.7,
       fatPer100g: 0.2,
       sourceNote: 'local:egg_white',
+      imageCategory: 'egg',
     ),
 
     // —— Red meat & pork ——
@@ -57,6 +61,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 8,
       sourceNote: 'local:beef_lean_ground_cooked',
+      imageCategory: 'beef',
     ),
     FoodReference(
       name: 'Beef, sirloin steak, lean, trimmed, raw',
@@ -65,6 +70,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 6,
       sourceNote: 'local:beef_sirloin_raw',
+      imageCategory: 'beef',
     ),
     FoodReference(
       name: 'Beef, flank steak, lean, raw',
@@ -73,6 +79,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 8,
       sourceNote: 'local:beef_flank',
+      imageCategory: 'beef',
     ),
     FoodReference(
       name: 'Pork loin, center loin, roasted',
@@ -81,6 +88,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 9,
       sourceNote: 'local:pork_loin_roasted',
+      imageCategory: 'pork',
     ),
     FoodReference(
       name: 'Ham, sliced, extra lean',
@@ -89,6 +97,7 @@ class LocalFoodCatalog {
       carbsPer100g: 1.5,
       fatPer100g: 4,
       sourceNote: 'local:ham_lean',
+      imageCategory: 'ham',
     ),
 
     // —— Fish & seafood ——
@@ -99,6 +108,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 13.4,
       sourceNote: 'local:salmon_raw',
+      imageCategory: 'fish',
     ),
     FoodReference(
       name: 'Tuna, light, canned in water, drained',
@@ -107,6 +117,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 1,
       sourceNote: 'local:tuna_canned',
+      imageCategory: 'fish',
     ),
     FoodReference(
       name: 'Shrimp, cooked',
@@ -115,6 +126,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0.2,
       fatPer100g: 0.3,
       sourceNote: 'local:shrimp_cooked',
+      imageCategory: 'seafood',
     ),
     FoodReference(
       name: 'Cod, Atlantic, cooked, dry heat',
@@ -123,6 +135,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 0.9,
       sourceNote: 'local:cod_cooked',
+      imageCategory: 'fish',
     ),
 
     // —— Plant protein ——
@@ -133,6 +146,7 @@ class LocalFoodCatalog {
       carbsPer100g: 2.8,
       fatPer100g: 8.7,
       sourceNote: 'local:tofu_firm',
+      imageCategory: 'tofu',
     ),
     FoodReference(
       name: 'Tempeh, cooked',
@@ -141,6 +155,7 @@ class LocalFoodCatalog {
       carbsPer100g: 8,
       fatPer100g: 11,
       sourceNote: 'local:tempeh',
+      imageCategory: 'tofu',
     ),
 
     // —— Dairy ——
@@ -151,6 +166,7 @@ class LocalFoodCatalog {
       carbsPer100g: 3.6,
       fatPer100g: 0.4,
       sourceNote: 'local:greek_yogurt_nf',
+      imageCategory: 'yogurt',
     ),
     FoodReference(
       name: 'Milk, whole, 3.25% milkfat',
@@ -159,6 +175,7 @@ class LocalFoodCatalog {
       carbsPer100g: 4.8,
       fatPer100g: 3.3,
       sourceNote: 'local:milk_whole',
+      imageCategory: 'milk',
     ),
     FoodReference(
       name: 'Milk, nonfat (skim)',
@@ -167,6 +184,7 @@ class LocalFoodCatalog {
       carbsPer100g: 5,
       fatPer100g: 0.1,
       sourceNote: 'local:milk_skim',
+      imageCategory: 'milk',
     ),
     FoodReference(
       name: 'Cottage cheese, lowfat (2%)',
@@ -175,6 +193,7 @@ class LocalFoodCatalog {
       carbsPer100g: 4.8,
       fatPer100g: 2.4,
       sourceNote: 'local:cottage_cheese',
+      imageCategory: 'cheese',
     ),
     FoodReference(
       name: 'Cheddar cheese, sharp',
@@ -183,6 +202,7 @@ class LocalFoodCatalog {
       carbsPer100g: 1.3,
       fatPer100g: 33,
       sourceNote: 'local:cheddar',
+      imageCategory: 'cheese',
     ),
     FoodReference(
       name: 'Mozzarella cheese, part skim',
@@ -191,6 +211,7 @@ class LocalFoodCatalog {
       carbsPer100g: 2.2,
       fatPer100g: 16,
       sourceNote: 'local:mozzarella',
+      imageCategory: 'cheese',
     ),
 
     // —— Grains & pasta (cooked unless noted) ——
@@ -201,6 +222,7 @@ class LocalFoodCatalog {
       carbsPer100g: 28,
       fatPer100g: 0.3,
       sourceNote: 'local:white_rice_cooked',
+      imageCategory: 'rice',
     ),
     FoodReference(
       name: 'Rice, brown, long-grain, cooked',
@@ -209,6 +231,7 @@ class LocalFoodCatalog {
       carbsPer100g: 23,
       fatPer100g: 0.3,
       sourceNote: 'local:brown_rice_cooked',
+      imageCategory: 'rice',
     ),
     FoodReference(
       name: 'Pasta, enriched, cooked (generic)',
@@ -292,6 +315,7 @@ class LocalFoodCatalog {
       carbsPer100g: 66,
       fatPer100g: 6.9,
       sourceNote: 'local:oats_dry',
+      imageCategory: 'oat',
     ),
     FoodReference(
       name: 'Oatmeal, cooked with water',
@@ -300,6 +324,7 @@ class LocalFoodCatalog {
       carbsPer100g: 12,
       fatPer100g: 1.4,
       sourceNote: 'local:oatmeal_cooked',
+      imageCategory: 'oat',
     ),
 
     // —— Fruits ——
@@ -411,6 +436,7 @@ class LocalFoodCatalog {
       carbsPer100g: 9.3,
       fatPer100g: 0.1,
       sourceNote: 'local:onion',
+      imageCategory: 'vegetable',
     ),
     FoodReference(
       name: 'Spinach, raw',
@@ -464,6 +490,7 @@ class LocalFoodCatalog {
       carbsPer100g: 3.6,
       fatPer100g: 0.1,
       sourceNote: 'local:cucumber',
+      imageCategory: 'vegetable',
     ),
     FoodReference(
       name: 'Mushrooms, white button, raw',
@@ -550,6 +577,7 @@ class LocalFoodCatalog {
       carbsPer100g: 19,
       fatPer100g: 53,
       sourceNote: 'local:almonds',
+      imageCategory: 'nut',
     ),
     FoodReference(
       name: 'Peanut butter, smooth',
@@ -558,6 +586,7 @@ class LocalFoodCatalog {
       carbsPer100g: 20,
       fatPer100g: 50,
       sourceNote: 'local:peanut_butter',
+      imageCategory: 'nut',
     ),
     FoodReference(
       name: 'Walnuts, English, pieces',
@@ -576,6 +605,7 @@ class LocalFoodCatalog {
       carbsPer100g: 0,
       fatPer100g: 100,
       sourceNote: 'local:olive_oil',
+      imageCategory: 'oil',
     ),
     FoodReference(
       name: 'Honey',
@@ -615,6 +645,20 @@ class LocalFoodCatalog {
       imageCategory: 'protein_powder',
     ),
   ];
+
+  static List<FoodReference> get allItems => List<FoodReference>.unmodifiable(_items);
+
+  static FoodReference? findBySourceNote(String? sourceNote) {
+    if (sourceNote == null || sourceNote.isEmpty) return null;
+    for (final e in _items) {
+      if (e.sourceNote == sourceNote) return e;
+    }
+    return null;
+  }
+
+  static String? imageCategoryForSourceNote(String? sourceNote) {
+    return findBySourceNote(sourceNote)?.imageCategory;
+  }
 
   static List<FoodReference> search(String query) {
     final raw = query.trim().toLowerCase();
