@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/meal_entry.dart';
+import '../models/research_study_record.dart';
 import '../models/user_profile.dart';
 import '../models/workout_entry.dart';
 import '../models/weekly_workout_program.dart';
@@ -29,6 +30,7 @@ class StorageRepository {
   static const _playerTotalXpKey = 'player_total_xp_v1';
   static const _playerMealXpDaysKey = 'player_meal_xp_days_v1';
   static const _playerWorkoutXpGrantsKey = 'player_workout_xp_grants_v1';
+  static const _researchStudyKey = 'research_study_v1';
 
   Future<UserProfile?> loadProfile() async {
     final sp = await SharedPreferences.getInstance();
@@ -255,5 +257,23 @@ class StorageRepository {
   Future<void> savePlayerWorkoutXpGrants(Map<String, int> grants) async {
     final sp = await SharedPreferences.getInstance();
     await sp.setString(_playerWorkoutXpGrantsKey, jsonEncode(grants));
+  }
+
+  Future<ResearchStudyRecord> loadResearchStudy() async {
+    final sp = await SharedPreferences.getInstance();
+    final raw = sp.getString(_researchStudyKey);
+    if (raw == null || raw.isEmpty) return ResearchStudyRecord.empty;
+    try {
+      return ResearchStudyRecord.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return ResearchStudyRecord.empty;
+    }
+  }
+
+  Future<void> saveResearchStudy(ResearchStudyRecord r) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString(_researchStudyKey, jsonEncode(r.toJson()));
   }
 }

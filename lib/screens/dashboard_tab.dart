@@ -76,10 +76,8 @@ class DashboardTab extends StatelessWidget {
                       icon: Icons.auto_awesome_motion_outlined,
                       color: cs.secondaryContainer,
                       onColor: cs.onSecondaryContainer,
-                      footer: p.workoutGuidanceMode ==
-                              WorkoutGuidanceMode.fixedRotation
-                          ? 'Mode: fixed weekday rotation'
-                          : 'Mode: adaptive from your recent logs',
+                      footer: 'Mode: ${p.workoutGuidanceMode.shortLabel} — '
+                          '${p.workoutGuidanceMode.label}',
                       onDismiss: () => app.dismissDashboardWorkoutSuggestion(),
                     ),
                   ],

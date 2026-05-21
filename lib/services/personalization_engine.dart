@@ -124,6 +124,36 @@ class PersonalizationEngine {
       ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
   }
 
+  /// Non-sequential baseline: same template from goal only (no log history).
+  WorkoutRecommendation _nonSequentialSuggestion(UserProfile p) {
+    switch (p.goal) {
+      case NutritionGoal.loseWeight:
+        return const WorkoutRecommendation(
+          title: 'Baseline: steady-state cardio (35 min)',
+          type: WorkoutType.cardio,
+          rationale:
+              'Non-sequential baseline — generic cardio template from goal only; does not read your recent logs (RQ2 comparison).',
+          intensityHint: 'Moderate pace; same suggestion regardless of prior sessions.',
+        );
+      case NutritionGoal.gainMuscle:
+        return const WorkoutRecommendation(
+          title: 'Baseline: standard push session (40 min)',
+          type: WorkoutType.strength,
+          rationale:
+              'Non-sequential baseline — generic strength template from goal only; ignores training history.',
+          intensityHint: 'Fixed template for benchmark comparison, not personalized sequencing.',
+        );
+      case NutritionGoal.maintain:
+        return const WorkoutRecommendation(
+          title: 'Baseline: mixed conditioning (40 min)',
+          type: WorkoutType.cardio,
+          rationale:
+              'Non-sequential baseline — static mixed session; no sequence-aware adjustment.',
+          intensityHint: 'Conversation pace; unchanged by what you logged last week.',
+        );
+    }
+  }
+
   /// Fixed weekday rotation: ignores logs (explicit thesis / evaluation baseline).
   WorkoutRecommendation _fixedRotationSuggestion(UserProfile p) {
     final strengthDay = DateTime.now().weekday.isOdd;
@@ -153,6 +183,9 @@ class PersonalizationEngine {
   ) {
     if (p.workoutGuidanceMode == WorkoutGuidanceMode.fixedRotation) {
       return _fixedRotationSuggestion(p);
+    }
+    if (p.workoutGuidanceMode == WorkoutGuidanceMode.nonSequential) {
+      return _nonSequentialSuggestion(p);
     }
 
     final last7 = workoutsSince(

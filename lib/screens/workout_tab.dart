@@ -423,9 +423,7 @@ class _WorkoutTabState extends State<WorkoutTab> {
                                     Chip(
                                       visualDensity: VisualDensity.compact,
                                       label: Text(
-                                        mode == WorkoutGuidanceMode.adaptive
-                                            ? 'Adaptive'
-                                            : 'Fixed',
+                                        mode?.shortLabel ?? '—',
                                         style: const TextStyle(fontSize: 12),
                                       ),
                                     ),
@@ -452,6 +450,26 @@ class _WorkoutTabState extends State<WorkoutTab> {
                         Text(
                           'Intensity: ${sug.intensityHint}',
                           style: tt.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                        ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: FilledButton.tonalIcon(
+                            onPressed: () async {
+                              await app.recordSuggestionAccepted();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Recorded: suggestion accepted (research metric).',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.check_circle_outline, size: 20),
+                            label: const Text('I followed this suggestion'),
+                          ),
                         ),
                       ],
                     ),

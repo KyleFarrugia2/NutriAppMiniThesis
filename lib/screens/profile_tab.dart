@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../models/user_profile.dart';
 import 'profile_edit_screen.dart';
 import 'feedback_screen.dart';
+import 'research_study_screen.dart';
 import 'usda_api_settings_screen.dart';
 
 class ProfileTab extends StatelessWidget {
@@ -72,19 +73,41 @@ class ProfileTab extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Card(
-                child: SwitchListTile(
+                child: ListTile(
                   title: const Text('Workout suggestion mode'),
                   subtitle: Text(
                     p.workoutGuidanceMode.label,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  value: p.workoutGuidanceMode == WorkoutGuidanceMode.adaptive,
-                  onChanged: (v) async {
-                    await app.updateProfile(
-                      p.copyWith(
-                        workoutGuidanceMode: v
-                            ? WorkoutGuidanceMode.adaptive
-                            : WorkoutGuidanceMode.fixedRotation,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => ProfileEditScreen(app: app),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                color: cs.primaryContainer.withValues(alpha: 0.35),
+                child: ListTile(
+                  leading: Icon(Icons.science_outlined, color: cs.primary),
+                  title: const Text('Research study session'),
+                  subtitle: Text(
+                    app.researchStudy.rq1Answerable && app.researchStudy.rq2Answerable
+                        ? 'RQ1 & RQ2 data ready — tap to review or export'
+                        : 'One guided pass to answer your thesis research questions',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => ResearchStudyScreen(app: app),
                       ),
                     );
                   },

@@ -197,28 +197,28 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
-                SegmentedButton<WorkoutGuidanceMode>(
-                  segments: const [
-                    ButtonSegment(
-                      value: WorkoutGuidanceMode.adaptive,
-                      label: Text('Adaptive'),
-                      icon: Icon(Icons.auto_awesome_outlined),
-                    ),
-                    ButtonSegment(
-                      value: WorkoutGuidanceMode.fixedRotation,
-                      label: Text('Fixed'),
-                      icon: Icon(Icons.calendar_today_outlined),
-                    ),
-                  ],
-                  selected: {_guidanceMode},
-                  onSelectionChanged: (s) =>
-                      setState(() => _guidanceMode = s.first),
+                ...WorkoutGuidanceMode.values.map(
+                  (m) => RadioListTile<WorkoutGuidanceMode>(
+                    value: m,
+                    groupValue: _guidanceMode,
+                    title: Text(m.label, style: Theme.of(context).textTheme.bodyMedium),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (v) {
+                      if (v != null) setState(() => _guidanceMode = v);
+                    },
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  _guidanceMode == WorkoutGuidanceMode.adaptive
-                      ? 'Uses your last 7 days of logs to balance strength vs cardio.'
-                      : 'Ignores logs; alternates by weekday for a simple baseline.',
+                  switch (_guidanceMode) {
+                    WorkoutGuidanceMode.adaptive =>
+                      'Sequence-aware: uses your last 7 days of logs (RQ1 & RQ2).',
+                    WorkoutGuidanceMode.fixedRotation =>
+                      'Fixed weekday template; ignores logs (RQ1 baseline).',
+                    WorkoutGuidanceMode.nonSequential =>
+                      'Static template from goal only; ignores history (RQ2 baseline).',
+                  },
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),

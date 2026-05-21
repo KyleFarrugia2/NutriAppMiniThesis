@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import 'models/meal_entry.dart';
+import 'models/research_study_record.dart';
 import 'models/user_profile.dart';
 import 'models/workout_entry.dart';
 import 'models/weekly_workout_program.dart';
@@ -65,6 +66,12 @@ class AppState extends ChangeNotifier {
   Set<String> mealXpAwardedDays = {};
   Map<String, int> workoutXpGrantsByDay = {};
 
+  ResearchStudyRecord researchStudy = ResearchStudyRecord.empty;
+
+  /// Set by [ResearchStudyScreen] while a timed usability task is running.
+  String? activeResearchTaskId;
+  DateTime? researchTaskStartedAt;
+
   PersonalizationEngine get engine => _engine;
 
   ProgressionSnapshot get progressionSnapshot =>
@@ -95,6 +102,7 @@ class AppState extends ChangeNotifier {
     totalPlayerXp = await _storage.loadPlayerTotalXp();
     mealXpAwardedDays = await _storage.loadPlayerMealXpDays();
     workoutXpGrantsByDay = await _storage.loadPlayerWorkoutXpGrants();
+    researchStudy = await _storage.loadResearchStudy();
     if (!hasUsdaApiKey) {
       const env = String.fromEnvironment('USDA_API_KEY', defaultValue: '');
       if (env.isNotEmpty) {
@@ -121,6 +129,7 @@ class AppState extends ChangeNotifier {
     final dayKey = dateKey(m.loggedAt);
     final firstMealOfDay = _engine.mealsForDay(meals, m.loggedAt).isEmpty;
     meals = [m, ...meals];
+    await _recordMealForResearch(m);
     await _storage.saveMeals(meals);
     if (firstMealOfDay && !mealXpAwardedDays.contains(dayKey)) {
       mealXpAwardedDays = {...mealXpAwardedDays, dayKey};
@@ -132,6 +141,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> addWorkout(WorkoutEntry w) async {
     workouts = [w, ...workouts];
+    await _recordWorkoutForResearch();
     await _storage.saveWorkouts(workouts);
     await _tryGrantWorkoutXp(
       w.completedAt,
@@ -353,6 +363,111 @@ class AppState extends ChangeNotifier {
   Future<void> dismissMealSlotMacroSuggestions() async {
     mealSlotMacroSuggestionsHidden = true;
     await _storage.saveMealSlotMacroSuggestionsHidden(true);
+    notifyListeners();
+  }
+
+  Future<void> saveResearchStudy(ResearchStudyRecord r) async {
+    researchStudy = r;
+    await _storage.saveResearchStudy(r);
+    notifyListeners();
+  }
+
+  Future<void> recordSuggestionAccepted() async {
+    final mode = profile?.workoutGuidanceMode;
+    if (mode == WorkoutGuidanceMode.adaptive) {
+      researchStudy = researchStudy.copyWith(
+        adaptiveSuggestionsAccepted:
+            researchStudy.adaptiveSuggestionsAccepted + 1,
+      );
+    } else if (mode == WorkoutGuidanceMode.fixedRotation) {
+      researchStudy = researchStudy.copyWith(
+        fixedSuggestionsAccepted: researchStudy.fixedSuggestionsAccepted + 1,
+      );
+    }
+    await _storage.saveResearchStudy(researchStudy);
+    notifyListeners();
+  }
+
+  void startResearchTimedTask(String taskId) {
+    activeResearchTaskId = taskId;
+    researchTaskStartedAt = DateTime.now();
+    notifyListeners();
+  }
+
+  Future<void> completeResearchTask(String taskId, int elapsedMs) async {
+    activeResearchTaskId = null;
+    researchTaskStartedAt = null;
+    switch (taskId) {
+      case 'meal_search':
+        researchStudy = researchStudy.copyWith(mealSearchTaskMs: elapsedMs);
+        break;
+      case 'manual_meal':
+        researchStudy = researchStudy.copyWith(manualMealTaskMs: elapsedMs);
+        break;
+      case 'workout_log':
+        researchStudy = researchStudy.copyWith(workoutLogTaskMs: elapsedMs);
+        break;
+    }
+    await _storage.saveResearchStudy(researchStudy);
+    notifyListeners();
+  }
+
+  Future<void> _recordMealForResearch(MealEntry m) async {
+    final method = MealLogMethodX.fromImageNote(m.imageNote);
+    var r = researchStudy;
+    if (method == MealLogMethod.imageAssisted) {
+      r = r.copyWith(
+        imageAssistedMealsLogged: r.imageAssistedMealsLogged + 1,
+      );
+    } else {
+      r = r.copyWith(manualMealsLogged: r.manualMealsLogged + 1);
+    }
+    final mode = profile?.workoutGuidanceMode;
+    if (mode == WorkoutGuidanceMode.adaptive) {
+      r = r.copyWith(adaptiveMealsLogged: r.adaptiveMealsLogged + 1);
+    } else if (mode == WorkoutGuidanceMode.fixedRotation) {
+      r = r.copyWith(fixedMealsLogged: r.fixedMealsLogged + 1);
+    }
+    researchStudy = r;
+    await _storage.saveResearchStudy(r);
+
+    if (activeResearchTaskId != null && researchTaskStartedAt != null) {
+      final ms =
+          DateTime.now().difference(researchTaskStartedAt!).inMilliseconds;
+      final task = activeResearchTaskId!;
+      if (task == 'meal_search' && method == MealLogMethod.imageAssisted) {
+        await completeResearchTask('meal_search', ms);
+      } else if (task == 'manual_meal' && method == MealLogMethod.manual) {
+        await completeResearchTask('manual_meal', ms);
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> _recordWorkoutForResearch() async {
+    final mode = profile?.workoutGuidanceMode;
+    var r = researchStudy;
+    if (mode == WorkoutGuidanceMode.adaptive) {
+      r = r.copyWith(
+        adaptiveWorkoutsLogged: r.adaptiveWorkoutsLogged + 1,
+        sequentialWorkoutsLogged: r.sequentialWorkoutsLogged + 1,
+      );
+    } else if (mode == WorkoutGuidanceMode.fixedRotation) {
+      r = r.copyWith(fixedWorkoutsLogged: r.fixedWorkoutsLogged + 1);
+    } else if (mode == WorkoutGuidanceMode.nonSequential) {
+      r = r.copyWith(
+        nonSequentialWorkoutsLogged: r.nonSequentialWorkoutsLogged + 1,
+      );
+    }
+    researchStudy = r;
+    await _storage.saveResearchStudy(r);
+
+    if (activeResearchTaskId == 'workout_log' &&
+        researchTaskStartedAt != null) {
+      final ms =
+          DateTime.now().difference(researchTaskStartedAt!).inMilliseconds;
+      await completeResearchTask('workout_log', ms);
+    }
     notifyListeners();
   }
 

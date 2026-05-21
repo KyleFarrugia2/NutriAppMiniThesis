@@ -13,16 +13,30 @@ enum NutritionGoal { loseWeight, maintain, gainMuscle }
 /// Minimum average daily steps recommended in-app for every nutrition goal.
 const int kRecommendedMinDailySteps = 8000;
 
-/// Adaptive uses recent logs. Fixed ignores them for a simple baseline comparison.
-enum WorkoutGuidanceMode { adaptive, fixedRotation }
+/// Adaptive = sequence-aware (RQ1/RQ2). Fixed = weekday template (RQ1 baseline).
+/// Non-sequential = goal-only template, ignores history (RQ2 baseline).
+enum WorkoutGuidanceMode { adaptive, fixedRotation, nonSequential }
 
 extension WorkoutGuidanceModeX on WorkoutGuidanceMode {
   String get label {
     switch (this) {
       case WorkoutGuidanceMode.adaptive:
-        return 'Adaptive (uses your logs)';
+        return 'Adaptive — sequence-aware (RQ1/RQ2)';
       case WorkoutGuidanceMode.fixedRotation:
-        return 'Fixed rotation (ignores logs)';
+        return 'Fixed rotation — rule baseline (RQ1)';
+      case WorkoutGuidanceMode.nonSequential:
+        return 'Non-sequential — static baseline (RQ2)';
+    }
+  }
+
+  String get shortLabel {
+    switch (this) {
+      case WorkoutGuidanceMode.adaptive:
+        return 'Adaptive';
+      case WorkoutGuidanceMode.fixedRotation:
+        return 'Fixed';
+      case WorkoutGuidanceMode.nonSequential:
+        return 'Non-seq.';
     }
   }
 }
