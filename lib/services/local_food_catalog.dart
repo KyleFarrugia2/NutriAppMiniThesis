@@ -243,6 +243,7 @@ class LocalFoodCatalog {
       carbsPer100g: 49,
       fatPer100g: 3.2,
       sourceNote: 'local:white_bread',
+      imageCategory: 'bread',
     ),
     FoodReference(
       name: 'Bread, whole wheat',
@@ -341,6 +342,7 @@ class LocalFoodCatalog {
       carbsPer100g: 7.7,
       fatPer100g: 0.3,
       sourceNote: 'local:strawberries',
+      imageCategory: 'berry',
     ),
     FoodReference(
       name: 'Grapes, red or green, raw',
@@ -591,6 +593,7 @@ class LocalFoodCatalog {
       carbsPer100g: 8,
       fatPer100g: 4,
       sourceNote: 'local:whey_protein',
+      imageCategory: 'protein_powder',
     ),
   ];
 

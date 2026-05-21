@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/food_image_resolver.dart';
 
-/// Circular food image for search rows, portion screen, and meal log.
+/// Minimal cartoon-style food tile (category icon, no photos).
 class FoodThumbnail extends StatelessWidget {
   const FoodThumbnail({
     super.key,
@@ -32,57 +32,36 @@ class FoodThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final url = FoodImageResolver.photoUrlFor(
+    final v = FoodImageResolver.visualFor(
       name,
       sourceNote: sourceNote,
       imageCategory: imageCategory,
     );
-    final emoji = FoodImageResolver.emojiFor(
-      name,
-      sourceNote: sourceNote,
-      imageCategory: imageCategory,
-    );
-    final cs = Theme.of(context).colorScheme;
+    final radius = size * 0.24;
+    final iconSize = size * 0.48;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(size * 0.22),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Image.network(
-          url!,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
-            return _EmojiTile(emoji: emoji, size: size, cs: cs);
-          },
-          errorBuilder: (_, __, ___) => _EmojiTile(emoji: emoji, size: size, cs: cs),
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: v.background,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: v.foreground.withValues(alpha: 0.22),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: v.foreground.withValues(alpha: 0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-    );
-  }
-}
-
-class _EmojiTile extends StatelessWidget {
-  const _EmojiTile({
-    required this.emoji,
-    required this.size,
-    required this.cs,
-  });
-
-  final String emoji;
-  final double size;
-  final ColorScheme cs;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: cs.surfaceContainerHighest,
-      child: Center(
-        child: Text(
-          emoji,
-          style: TextStyle(fontSize: size * 0.48),
-        ),
+      child: Icon(
+        v.icon,
+        size: iconSize,
+        color: v.foreground,
       ),
     );
   }
