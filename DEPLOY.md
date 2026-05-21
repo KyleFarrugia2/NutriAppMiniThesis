@@ -39,32 +39,6 @@ Follow prompts; ensure the project root is `nutri_work_app`.
 
 ---
 
-## Alternative: GitHub Pages
-
-**https://kylefarrugia2.github.io/Minithesis/**
-
-Share this URL so people can open the app in Chrome, Edge, or Safari without installing anything.
-
----
-
-## One-time GitHub Pages setup
-
-1. Push this repo to `https://github.com/KyleFarrugia2/Minithesis` (branch `main`).
-2. On GitHub: **Settings → Pages → Build and deployment**
-   - **Source:** GitHub Actions (not “Deploy from branch”).
-3. Push any change under `nutri_work_app/` — the workflow `.github/workflows/deploy-nutri-work-web.yml` builds and deploys automatically.
-4. Wait ~3–5 minutes, then open the live URL above.
-
-To deploy manually from your PC:
-
-```bash
-cd nutri_work_app
-flutter pub get
-flutter build web --release --base-href "/Minithesis/"
-```
-
----
-
 ## Tester feedback & questions
 
 ### In the app
@@ -80,13 +54,7 @@ flutter build web --release --base-href "/Minithesis/"
 1. Go to [Google Forms](https://forms.google.com) and create a form, e.g. “Nutri Work — tester feedback”.
 2. Suggested fields: name (optional), ease of use (1–5), what worked well, what was confusing, would you use this again (yes/no).
 3. Copy the **share link** (e.g. `https://forms.gle/xxxxx`).
-4. Either:
-   - Edit `lib/config/app_config.dart` and set `defaultValue` for `feedbackFormUrl`, **or**
-   - Add to the GitHub workflow build step:
-     ```text
-     --dart-define=FEEDBACK_FORM_URL=https://forms.gle/YOUR_FORM_ID
-     ```
-5. Push and redeploy.
+4. Either edit `lib/config/app_config.dart` (`feedbackFormUrl` default) or set `FEEDBACK_FORM_URL` in Vercel environment variables, then redeploy.
 
 ---
 

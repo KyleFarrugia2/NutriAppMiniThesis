@@ -24,7 +24,7 @@ Flutter mobile application supporting **personalized calorie and macronutrient t
 
 ## Web demo for testers
 
-Deploy on **[Vercel](DEPLOY.md)** (recommended) or [GitHub Pages](DEPLOY.md).
+Deploy on **[Vercel](DEPLOY.md)** — see `DEPLOY.md` for setup.
 
 After deploy, share your URL (e.g. `https://your-project.vercel.app`). Testers use **Profile → Feedback & questions** to email you or open your Google Form.
 
