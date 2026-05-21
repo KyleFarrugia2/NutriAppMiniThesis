@@ -118,7 +118,7 @@ class FoodImageResolver {
       foreground: Color(0xFFC62828),
     ),
     'berry': FoodCategoryVisual(
-      icon: Icons.nutrition_rounded,
+      icon: Icons.local_florist_rounded,
       background: Color(0xFFF8BBD9),
       foreground: Color(0xFFC2185B),
     ),
